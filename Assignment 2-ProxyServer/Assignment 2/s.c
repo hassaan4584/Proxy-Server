@@ -213,7 +213,7 @@ static void handle_get (int connection_fd, const char* page)
             char buffer[256];
             /* Extract host and port from HTTP Request */
             char hoststring[100] = "www.google.com";
-            char req[1024] = "GET /index.html HTTP/1.0\r\n\r\n";
+            char req[1024] = "GET http://www.google.com.pk/?gws_rd=cr&amp;ei=iqDkWPukEIGMsgHboaaIBw HTTP/1.0\r\n\r\n";
             /* Parsing the request string */
 //            for(i=0; i<strlen(req); i++)
 //            {
@@ -244,7 +244,7 @@ static void handle_get (int connection_fd, const char* page)
                 fprintf(stderr, "No such host\n");
                 exit(0);
             }
-            printf("\nConnected to host\n");
+//            printf("\nConnected to host\n");
             
             bzero((char *) &serv_addr, sizeof(serv_addr));
             serv_addr.sin_family = AF_INET;
@@ -275,7 +275,7 @@ static void handle_get (int connection_fd, const char* page)
             bzero(buffer, 256);
             flag = 1;
             size_t i;
-            printf("\nreading server response\n");
+//            printf("\nreading server response\n");
             while( (n = read(sockfd, buffer, 255) > 0))
             {
                 if(flag)

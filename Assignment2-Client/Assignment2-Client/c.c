@@ -16,7 +16,7 @@
 #include <netdb.h>// #include <conio.h>
 
 
-#define PORT_NO							80
+#define PORT_NO							5569
 #define QUIT_CONNECTION 				"QUIT"
 #define NEW_CONNECTION 					"NEW-CONNECTION"
 #define FILE_SUCCESSFULLY_RECEIVED		"FILE-SUCCESSFULLY-RECEIVED"
@@ -123,7 +123,7 @@ int main(int argc, char* argv[] )
 	// }
        
 	// fd = socket_connect(argv[1], atoi(argv[2])); 
-	char hostname[1024] = "www.fb.com";
+	char hostname[1024] = "127.0.0.1";
     struct hostent *hp;
     struct sockaddr_in addr;
     int on = 1;

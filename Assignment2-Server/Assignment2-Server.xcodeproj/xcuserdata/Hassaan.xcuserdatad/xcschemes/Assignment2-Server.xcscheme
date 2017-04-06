@@ -14,10 +14,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "0541A10E1E919CC900F022F8"
-               BuildableName = "Assignment 2"
-               BlueprintName = "Assignment 2"
-               ReferencedContainer = "container:Assignment 2.xcodeproj">
+               BlueprintIdentifier = "053F55AB1E95281C00EBB05D"
+               BuildableName = "Assignment2-Server"
+               BlueprintName = "Assignment2-Server"
+               ReferencedContainer = "container:Assignment2-Server.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -32,10 +32,10 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "0541A10E1E919CC900F022F8"
-            BuildableName = "Assignment 2"
-            BlueprintName = "Assignment 2"
-            ReferencedContainer = "container:Assignment 2.xcodeproj">
+            BlueprintIdentifier = "053F55AB1E95281C00EBB05D"
+            BuildableName = "Assignment2-Server"
+            BlueprintName = "Assignment2-Server"
+            ReferencedContainer = "container:Assignment2-Server.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <AdditionalOptions>
@@ -55,22 +55,12 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "0541A10E1E919CC900F022F8"
-            BuildableName = "Assignment 2"
-            BlueprintName = "Assignment 2"
-            ReferencedContainer = "container:Assignment 2.xcodeproj">
+            BlueprintIdentifier = "053F55AB1E95281C00EBB05D"
+            BuildableName = "Assignment2-Server"
+            BlueprintName = "Assignment2-Server"
+            ReferencedContainer = "container:Assignment2-Server.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <CommandLineArguments>
-         <CommandLineArgument
-            argument = "10"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "10"
-            isEnabled = "YES">
-         </CommandLineArgument>
-      </CommandLineArguments>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>
@@ -84,10 +74,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "0541A10E1E919CC900F022F8"
-            BuildableName = "Assignment 2"
-            BlueprintName = "Assignment 2"
-            ReferencedContainer = "container:Assignment 2.xcodeproj">
+            BlueprintIdentifier = "053F55AB1E95281C00EBB05D"
+            BuildableName = "Assignment2-Server"
+            BlueprintName = "Assignment2-Server"
+            ReferencedContainer = "container:Assignment2-Server.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

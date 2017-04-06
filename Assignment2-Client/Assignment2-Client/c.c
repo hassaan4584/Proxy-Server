@@ -16,7 +16,7 @@
 #include <netdb.h>// #include <conio.h>
 
 
-#define PORT_NO							5569
+#define PROXY_SERVER_PORT_NO			5569
 #define QUIT_CONNECTION 				"QUIT"
 #define NEW_CONNECTION 					"NEW-CONNECTION"
 #define FILE_SUCCESSFULLY_RECEIVED		"FILE-SUCCESSFULLY-RECEIVED"
@@ -135,7 +135,7 @@ int main(int argc, char* argv[] )
     }
     printf("%s\n",hp->h_name );
     bcopy(hp->h_addr, &addr.sin_addr, hp->h_length);
-    addr.sin_port = htons(PORT_NO);
+    addr.sin_port = htons(PROXY_SERVER_PORT_NO);
     addr.sin_family = AF_INET;
     
     pthread_t *allThreads = malloc(sizeof(pthread_t)*totalThreads);
@@ -145,7 +145,8 @@ int main(int argc, char* argv[] )
         
         if(sd == -1){
             perror("setsockopt");
-            exit(1);
+//            exit(1);
+            continue;
         }
         if(connect(sd, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) == -1){
             perror("error on connect... \nSkipping");
@@ -184,7 +185,7 @@ void *make_request(void *param)
 {
     struct Details *details = (struct Details*)param;
     if (details == NULL) {
-        exit(4);
+        return NULL;
     }
     
     int sd = details->socket_id;
@@ -206,10 +207,9 @@ void *make_request(void *param)
         
         printf("Thread : %d   Request : %d    Total bytes received : %ld\n", details->thread_number, i, totalBytesRead);
         
-        shutdown(sd, SHUT_RDWR);
-        close(sd);
-
     }
+    shutdown(sd, SHUT_RDWR);
+    close(sd);
     
     return NULL;
 }
@@ -230,7 +230,7 @@ void create_required_threads()
 	}		
 
 	serv_addr.sin_family=AF_INET;
-	serv_addr.sin_port = htons (PORT_NO);
+	serv_addr.sin_port = htons (PROXY_SERVER_PORT_NO);
 	serv_addr.sin_addr.s_addr = inet_addr ("127.0.0.1");
 
 	// requesting to connect using the accept function

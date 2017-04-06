@@ -21,8 +21,8 @@
 #define NEW_CONNECTION 					"NEW-CONNECTION"
 #define FILE_SUCCESSFULLY_RECEIVED		"FILE-SUCCESSFULLY-RECEIVED"
 
-#define BUFFER_SIZE 1024
-#define MAXLINE 1024
+#define BUFFER_SIZE                     1024
+#define MAXLINE                         1024
 
 
 struct Details

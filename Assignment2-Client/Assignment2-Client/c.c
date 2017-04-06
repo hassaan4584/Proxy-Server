@@ -34,8 +34,6 @@ struct Details
 
 
 
-int myReceive(int socket, char *arr, int length, int flag);
-int mySend(int socket, char *arr, int length, int flag);
 void parse_command_line_arguments(int argc, char* argv[], int*, int* );
 void create_required_threads();
 void *make_request(void *param);

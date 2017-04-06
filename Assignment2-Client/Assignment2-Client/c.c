@@ -268,37 +268,4 @@ void parse_command_line_arguments(int argc, char* argv[], int *totalThreads, int
    }
 }
 
-int myReceive(int socket, char *arr, int length, int flag)
-{
-	int recv_id = recv (socket, arr, length, flag); 
-	if(recv_id == -1 )
-	{
-		error("Client. Some error occured receiving\n");
-		perror("Client. Some error occured receiving\n");
-		close(socket);
-		exit(1); 
-	}
-	else if(strcmp(arr, QUIT_CONNECTION) == 0) { // same strings
-		printf("\nServer terminated connection\n");
-		close(socket);
-		exit(1); 
-	}
-	else if(strcmp(arr, FILE_SUCCESSFULLY_RECEIVED) == 0) { // same strings
-		printf("\n***** File successfully received. *****\n");
-	}
-	return recv_id;
-}
-
-int mySend(int socket, char *arr, int length, int flag)
-{
-	int send_id = send(socket, arr, length, flag);
-	if(send_id == -1)
-	{
-		error("Client. Could not send");
-		perror("Client. Could not send");
-		exit(1);
-		return -1;
-	}
-	return send_id;
-}
 

@@ -425,28 +425,6 @@ int createThreadPool(struct ThreadPoolManager *manager)
 
 }
 
-//****************** HELPER FUNCTIONS ******************//
 
-int myReceive(int socket, char *arr, int length, int flag)
-{
-	int recv_id = (int)recv (socket, arr, length, flag);
-	if(recv_id == -1 )
-	{
-		error("Server. Some error occured receiving\n");
-		perror("Server. Some error occured receiving\n");
-	}
-	return recv_id;
-}
-
-int mySend(int socket, char *arr, int length, int flag)
-{
-	int send_id = (int)send(socket, arr, length, flag);
-	if(send_id == -1)
-	{
-		error("Server. Could not send");
-		perror("Server. Could not send");
-	}
-	return send_id;
-}
 
 

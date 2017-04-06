@@ -113,28 +113,10 @@ void *handle_request(void *param);
 void send_file(char *fileName, int new_sd);
 int createThreadPool(struct ThreadPoolManager *manager);
 
+int getNextEmptyThreadNumber(struct ThreadPoolManager* poolManager, int nextThreadNumber, bool force);
 int myReceive(int socket, char *arr, int length, int flag);
 int mySend(int socket, char *arr, int length, int flag);
 
-
-int getNextEmptyThreadNumber(struct ThreadPoolManager* poolManager, int nextThreadNumber, bool force) {
-
-    if (poolManager->threadArr[nextThreadNumber].isFree == true) {
-        return nextThreadNumber; // the next thread is free
-    }
-    for (int i=(nextThreadNumber+1)%MAX_THREAD_COUNT ; i != nextThreadNumber ; i++) {
-        if (poolManager->threadArr[i].isFree == true) {
-            return i;
-        }
-    }
-    sleep(1);
-    if (force) {
-        return getNextEmptyThreadNumber(poolManager, 1, false);
-    }
-    else {
-        return 1;
-    }
-}
 
 // MARK: - Main Function
 //****************** MAIN FUNCTION ******************//
@@ -430,7 +412,27 @@ int createThreadPool(struct ThreadPoolManager *manager)
 
 }
 
+// MARK: - Helper Funcitons
 //****************** HELPER FUNCTIONS ******************//
+
+int getNextEmptyThreadNumber(struct ThreadPoolManager* poolManager, int nextThreadNumber, bool force) {
+    
+    if (poolManager->threadArr[nextThreadNumber].isFree == true) {
+        return nextThreadNumber; // the next thread is free
+    }
+    for (int i=(nextThreadNumber+1)%MAX_THREAD_COUNT ; i != nextThreadNumber ; i++) {
+        if (poolManager->threadArr[i].isFree == true) {
+            return i;
+        }
+    }
+    sleep(1);
+    if (force) {
+        return getNextEmptyThreadNumber(poolManager, 1, false);
+    }
+    else {
+        return 1;
+    }
+}
 
 int myReceive(int socket, char *arr, int length, int flag)
 {

@@ -16,22 +16,28 @@
 #include <stdbool.h>
 #include <string.h>
 #include <arpa/inet.h>
-#include<fcntl.h>
-#include<signal.h>
+#include <fcntl.h>
+#include <signal.h>
 #include <netinet/tcp.h>
-#include<netdb.h>
-
+#include <netdb.h>
+#include <sys/mman.h>
+#include <sys/stat.h>        /* For mode constants */
+#include <sys/ipc.h>
+#include <sys/shm.h>
 
 // MARK: - Constants
 
-#define PROXY_SERVER_PORT_NO			5569
+#define PROXY_SERVER_PORT_NO			5568
 #define SERVER_PORT_NO					PROXY_SERVER_PORT_NO + 100
 #define QUIT 							"QUIT"
 #define NEW_CONNECTION			 		"NEW-CONNECTION"
 #define FILE_SUCCESSFULLY_RECEIVED		"FILE-SUCCESSFULLY-RECEIVED"
+#define LOCAL_GET                       "LOCAL-GET"
 #define BYTES                           1024
 #define MAX_THREAD_COUNT                1024
 #define BUFFER_SIZE                     1024
+#define SEGMENT_SIZE                    100
+#define FTOK_KEY                        "/Hassaan"
 
 pthread_cond_t cond[MAX_THREAD_COUNT];
 pthread_mutex_t mutex[MAX_THREAD_COUNT];
@@ -107,6 +113,14 @@ struct ThreadPoolManager
 {
 	struct Thread threadArr[MAX_THREAD_COUNT];
 	int totalThreadCount; 
+};
+
+struct SharedMemory
+{
+    pthread_cond_t cond;
+    pthread_mutex_t mutex;
+    bool hasFileCompletelyWritten;
+    char data[BUFFER_SIZE];
 };
 
 void *handle_request(void *param);
@@ -209,6 +223,43 @@ static void handle_get (int connection_fd, const char* page)
             /* Send it to the client.  */
 //            write (connection_fd, response, strlen (response));
             
+            // *********
+            
+//            int seg = shmget(ftok("/hassaan", 100), 1024, IPC_CREAT | IPC_EXCL);
+//            void* shm_address = shmat(seg, (void *) 0, 0);
+//            struct SharedMem* shm_ptr = (sharedMem)shm_address;
+//            struct SharedMem ;
+
+            key_t key;
+            int   shmid;
+            struct SharedMemory* segptr;
+            
+            /* Create unique key via call to ftok() */
+            key = ftok(FTOK_KEY, 'S');
+            
+            if((shmid = shmget(key, SEGMENT_SIZE, IPC_CREAT|IPC_EXCL|0666)) == -1) {
+                printf("Shared memory segment exists - opening as client\n");
+                
+                /* Segment probably already exists - try as a client */
+                if((shmid = shmget(key, SEGMENT_SIZE, 0)) == -1) {
+                    perror("shmget");
+                    exit(1);
+                }
+            }
+            else {
+                printf("Creating new shared memory segment\n");
+            }
+            /* Attach (map) the shared memory segment into the current process */
+            (segptr = (struct SharedMemory *)shmat(shmid, 0, 0));
+            if( segptr == (struct SharedMemory*)-1) {
+                perror("shmat");
+                exit(1);
+            }
+            
+            strcpy(segptr->data, "Hello shared memory !");
+            
+            
+            //***********
             
             ///// ***********
             
@@ -240,7 +291,7 @@ static void handle_get (int connection_fd, const char* page)
             }
             
             char buffer[BUFFER_SIZE];
-            char completeRequest[1024] = "GET /index.html HTTP/1.0\r\n\r\n";
+            char completeRequest[1024] = "LOCAL-GET /index.html HTTP/1.0\r\n\r\n";
             
             write(sd, completeRequest, strlen(completeRequest));
             bzero(buffer, BUFFER_SIZE);
@@ -261,6 +312,8 @@ static void handle_get (int connection_fd, const char* page)
             close(sd);
             
             
+            write(connection_fd, segptr->data, strlen(segptr->data));
+
             //**********
         }
         

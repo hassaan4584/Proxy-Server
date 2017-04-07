@@ -20,16 +20,23 @@
 #include<signal.h>
 #include <netinet/tcp.h>
 #include<netdb.h>
+#include <sys/mman.h>
+#include <sys/stat.h>        /* For mode constants */
+#include <sys/ipc.h>
+#include <sys/shm.h>
 
 
 // MARK: - Constants
-#define PROXY_SERVER_PORT_NO            5569
+#define PROXY_SERVER_PORT_NO            5568
 #define SERVER_PORT_NO					PROXY_SERVER_PORT_NO + 100
 #define QUIT 							"QUIT"
 #define NEW_CONNECTION			 		"NEW-CONNECTION"
 #define FILE_SUCCESSFULLY_RECEIVED		"FILE-SUCCESSFULLY-RECEIVED"
 #define BYTES                           1024
 #define MAX_THREAD_COUNT                1024
+#define BUFFER_SIZE                     1024
+#define SEGMENT_SIZE                    100
+#define FTOK_KEY                        "/Hassaan"
 
 pthread_cond_t cond[MAX_THREAD_COUNT];
 pthread_mutex_t mutex[MAX_THREAD_COUNT];
@@ -107,6 +114,14 @@ struct ThreadPoolManager
 	int totalThreadCount; 
 };
 
+struct SharedMemory
+{
+    pthread_cond_t cond;
+    pthread_mutex_t mutex;
+    bool hasFileCompletelyWritten;
+    char data[BUFFER_SIZE];
+};
+
 void *handle_request(void *param);
 void send_file(char *fileName, int new_sd);
 int createThreadPool(struct ThreadPoolManager *manager);
@@ -157,7 +172,173 @@ int main()
 
 	return 0;
 }
+//****************** HANDLE LOCAL GET REQUEST function ******************//
 
+static void handle_local_get (int connection_fd, const char* page)
+{
+    char data_to_send[BYTES];
+    int fd;
+    long bytes_read;
+    /* Make sure the requested page begins with a slash and does not
+     contain any additional slashes -- we don't support any
+     subdirectories.  */
+    if (*page == '/' && strchr (page + 1, '/') == NULL) {
+        char file_name[1024];
+        
+        
+        if ( strncmp(page, "/\0", 2)==0 ) {
+            snprintf (file_name, sizeof ("index.html"), "index.html");
+            //Because if no file is specified, index.html will be opened by default
+        }
+        else {
+            snprintf (file_name, sizeof (file_name), "%s", page);
+            // removing the "/" on the first index
+            memmove (file_name, file_name+1, strlen (file_name+1) + 1);
+        }
+        //        strcpy(path, ROOT);
+        //        strcpy(&path[strlen(ROOT)], page);
+        
+        if ( (fd=open(file_name, O_RDONLY))!=-1 )    //FILE FOUND
+        {
+            write (connection_fd, ok_response, strlen (ok_response));
+            while ( (bytes_read=read(fd, data_to_send, BYTES-1))>0 ) {
+                write (connection_fd, data_to_send, bytes_read);
+            }
+        }
+        else {
+            /* Either the requested page was malformed, or we couldn't open a
+             module with the indicated name.  Either way, return the HTTP
+             response 404, Not Found.  */
+            char response[1024];
+            
+            /* Generate the response message.  */
+            snprintf (response, sizeof (response), not_found_response_template, page);
+            /* Send it to the client.  */
+            write (connection_fd, response, strlen (response));
+            printf("Total Response sent : %ld\n", strlen(response));
+            
+            key_t key;
+            int   shmid;
+            struct SharedMemory* segptr;
+            
+            /* Create unique key via call to ftok() */
+            key = ftok(FTOK_KEY, 'S');
+            
+            if((shmid = shmget(key, SEGMENT_SIZE, IPC_CREAT|IPC_EXCL|0666)) == -1) {
+                printf("Shared memory segment exists - opening as client\n");
+                
+                /* Segment probably already exists - try as a client */
+                if((shmid = shmget(key, SEGMENT_SIZE, 0)) == -1) {
+                    perror("shmget");
+                    exit(1);
+                }
+            }
+            else {
+                printf("Creating new shared memory segment\n");
+            }
+            /* Attach (map) the shared memory segment into the current process */
+            (segptr = (struct SharedMemory *)shmat(shmid, 0, 0));
+            if( segptr == (struct SharedMemory*)-1) {
+                perror("shmat");
+                exit(1);
+            }
+            
+            strcpy(segptr->data, response);
+
+            /// ****************
+            
+            //            size_t n;
+            //            int sockfd, portno, flag;
+            //            struct sockaddr_in serv_addr;
+            //            struct in_addr *pptr;
+            //            struct hostent *server;
+            //
+            //            char buffer[256];
+            //            /* Extract host and port from HTTP Request */
+            //            char hoststring[100] = "www.google.com";
+            //            char req[1024] = "GET http://www.google.com.pk/?gws_rd=cr&amp;ei=iqDkWPukEIGMsgHboaaIBw HTTP/1.0\r\n\r\n";
+            //            /* Parsing the request string */
+            ////            for(i=0; i<strlen(req); i++)
+            ////            {
+            ////                if(req[i] == 'H' && req[i+1] == 'o' && req[i+2] == 's' && req[i+3] == 't')
+            ////                {
+            ////                    for(j=i+6; req[j] != '\r'; j++)
+            ////                    {
+            ////                        hoststring[j-i-6] = req[j];
+            ////                    }
+            ////                    hoststring[j] = '\0';
+            ////                    break;
+            ////                }
+            ////            }
+            ////            printf("\nHost extracted : '%s'\n", hoststring);
+            //            /* default port */
+            //            portno = 80;
+            //
+            //            /* Create a socket point */
+            //            sockfd = socket(AF_INET, SOCK_STREAM, 0);
+            //            if(sockfd < 0)
+            //            {
+            //                perror("Error opening socket\n");
+            //                exit(1);
+            //            }
+            //            server = gethostbyname(hoststring);
+            //            if (server == NULL)
+            //            {
+            //                fprintf(stderr, "No such host\n");
+            //                exit(0);
+            //            }
+            ////            printf("\nConnected to host\n");
+            //
+            //            bzero((char *) &serv_addr, sizeof(serv_addr));
+            //            serv_addr.sin_family = AF_INET;
+            //            pptr = (struct in_addr  *)server->h_addr;
+            //            bcopy((char *)pptr, (char *)&serv_addr.sin_addr, server->h_length);
+            //            serv_addr.sin_port = htons(portno);
+            //
+            //            /* Connect to server */
+            //            if(connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr))<0)
+            //            {
+            //                perror("Error in connecting to server\n");
+            //                exit(1);
+            //            }
+            //
+            //            /* Message to be sent to the server */
+            //            /* printf("message to server : "); */
+            //            bzero(buffer, 256);
+            //            /* fgets(buffer, 255, stdin); */
+            //
+            //            /* Send message to server */
+            //            n = write(sockfd, req, strlen(req));
+            //            if(n == 0) {
+            //                perror("Error writing to socket\n");
+            //                exit(1);
+            //            }
+            //            
+            //            /* Read server response */
+            //            bzero(buffer, 256);
+            //            flag = 1;
+            //            size_t i;
+            ////            printf("\nreading server response\n");
+            //            while( (n = read(sockfd, buffer, 255) > 0))
+            //            {
+            //                if(flag)
+            //                {
+            //                    printf("%s", buffer);
+            //                    flag = 0;
+            //                }
+            //                i = write(connection_fd, buffer, strlen(buffer));
+            //            }
+            //            close(sockfd);
+            
+            
+            //// ******************
+        }
+        
+        /* Try to open the module.  */
+        //        module = module_open (module_file_name);
+    }
+    
+}
 
 //****************** HANDLE GET REQUEST function ******************//
 
@@ -358,7 +539,7 @@ void *handle_request(void *param)
             write (new_sd, bad_request_response,
                    sizeof (bad_request_response));
         }
-        else if (strcmp (method, "GET")) {
+        else if (strcmp (method, "GET") && strcmp(method, "LOCAL-GET")) {
             /* This server only implements the GET method.  The client
              specified some other method, so report the failure.  */
             char response[1024];
@@ -367,9 +548,15 @@ void *handle_request(void *param)
                       bad_method_response_template, method);
             write (new_sd, response, strlen (response));
         }
-        else
-        /* A valid request.  Process it.  */
-            handle_get (new_sd, url);
+        else {
+            /* A valid request.  Process it.  */
+            if (strcmp(method, "LOCAL-GET") == 0) {
+                handle_local_get(new_sd, url);
+            }
+            else {
+                handle_get (new_sd, url);
+            }
+        }
     }
     else if (bytes_read == 0)
     /* The client closed the connection before sending any data.

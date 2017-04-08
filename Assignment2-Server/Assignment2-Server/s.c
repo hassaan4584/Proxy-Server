@@ -35,7 +35,7 @@
 #define BYTES                           1024
 #define MAX_THREAD_COUNT                1024
 #define BUFFER_SIZE                     1024
-#define SEGMENT_SIZE                    100
+#define SEGMENT_SIZE                    4*1024
 #define FTOK_KEY                        "/Hassaan"
 
 pthread_cond_t cond[MAX_THREAD_COUNT];
@@ -344,6 +344,7 @@ static void handle_local_get (int connection_fd, const char* page)
 
 static void handle_get (int connection_fd, const char* page)
 {
+    printf("\nServer. Transmitting data via sockets.");
     char data_to_send[BYTES];
     int fd;
     long bytes_read;

@@ -43,7 +43,6 @@ int socket_connect(char *host, in_port_t port);
 
 //****************** MAIN FUNCTION ******************//
 
-    // #MARK: - hello
 int main(int argc, char* argv[] )
 {
 	 system("clear");

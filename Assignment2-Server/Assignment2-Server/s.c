@@ -27,7 +27,7 @@
 
 
 // MARK: - Constants
-#define PROXY_SERVER_PORT_NO            5568
+#define PROXY_SERVER_PORT_NO            5567
 #define SERVER_PORT_NO					PROXY_SERVER_PORT_NO + 100
 #define QUIT 							"QUIT"
 #define NEW_CONNECTION			 		"NEW-CONNECTION"
@@ -35,7 +35,7 @@
 #define BYTES                           1024
 #define MAX_THREAD_COUNT                1024
 #define BUFFER_SIZE                     1024
-#define SEGMENT_SIZE                    4*1024
+#define SEGMENT_SIZE                    10
 #define FTOK_KEY                        "/Hassaan"
 
 pthread_cond_t cond[MAX_THREAD_COUNT];
@@ -224,18 +224,18 @@ static void handle_local_get (int connection_fd, const char* page)
             /* Create unique key via call to ftok() */
             key = ftok(FTOK_KEY, 'S');
             
-            if((shmid = shmget(key, SEGMENT_SIZE, IPC_CREAT|IPC_EXCL|0666)) == -1) {
-                printf("Shared memory segment exists - opening as client\n");
-                
+//            if((shmid = shmget(key, SEGMENT_SIZE, IPC_CREAT|IPC_EXCL|0666)) == -1) {
+//                printf("Shared memory segment exists - opening as client\n");
+            
                 /* Segment probably already exists - try as a client */
                 if((shmid = shmget(key, SEGMENT_SIZE, 0)) == -1) {
                     perror("shmget");
                     exit(1);
                 }
-            }
-            else {
-                printf("Creating new shared memory segment\n");
-            }
+//            }
+//            else {
+//                printf("Creating new shared memory segment\n");
+//            }
             /* Attach (map) the shared memory segment into the current process */
             (segptr = (struct SharedMemory *)shmat(shmid, 0, 0));
             if( segptr == (struct SharedMemory*)-1) {

@@ -9,6 +9,10 @@
 #ifndef requestHandlers_h
 #define requestHandlers_h
 
+
+
+
+
 //****************** HANDLE GET REQUEST Via SHARED MEMORY function ******************//
 
 static void handle_get_with_shared_memory (int connection_fd, const char* page)
@@ -72,6 +76,16 @@ static void handle_get_with_shared_memory (int connection_fd, const char* page)
             }
             else {
                 printf("Creating new shared memory segment\n");
+                if (pthread_mutex_init(&segptr->mutex, NULL) != 0) {
+                    perror("pthread_mutex_init() error");
+                }
+                if (pthread_cond_init(&segptr->cond, NULL) != 0) {
+                    perror("pthread_cond_init() error");
+                }
+                if (pthread_mutex_lock(&segptr->mutex) != 0) {
+                    perror("pthread_mutex_lock() error");
+                }
+
             }
             /* Attach (map) the shared memory segment into the current process */
             (segptr = (struct SharedMemory *)shmat(shmid, 0, 0));
@@ -80,6 +94,10 @@ static void handle_get_with_shared_memory (int connection_fd, const char* page)
                 exit(1);
             }
             
+            if (pthread_cond_wait(&segptr->cond, &segptr->mutex) != 0) {
+                perror("pthread_cond_timedwait() error");
+            }
+
             strcpy(segptr->data, "Hello shared memory !");
             
             

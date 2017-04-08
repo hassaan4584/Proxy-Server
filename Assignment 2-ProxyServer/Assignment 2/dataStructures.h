@@ -13,7 +13,7 @@
 
 // MARK: - Constants
 
-#define PROXY_SERVER_PORT_NO			5568
+#define PROXY_SERVER_PORT_NO			5567
 #define SERVER_PORT_NO					PROXY_SERVER_PORT_NO + 100
 #define QUIT 							"QUIT"
 #define NEW_CONNECTION			 		"NEW-CONNECTION"
@@ -22,7 +22,7 @@
 #define BYTES                           1024
 #define MAX_THREAD_COUNT                1024
 #define BUFFER_SIZE                     1024
-#define SEGMENT_SIZE                    4*1024
+#define SEGMENT_SIZE                    10
 #define FTOK_KEY                        "/Hassaan"
 
 // MARK: - Global Variables

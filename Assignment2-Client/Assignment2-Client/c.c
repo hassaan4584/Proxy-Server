@@ -16,7 +16,7 @@
 #include <netdb.h>// #include <conio.h>
 
 
-#define PROXY_SERVER_PORT_NO			5568
+#define PROXY_SERVER_PORT_NO			5567
 #define QUIT_CONNECTION 				"QUIT"
 #define NEW_CONNECTION 					"NEW-CONNECTION"
 #define FILE_SUCCESSFULLY_RECEIVED		"FILE-SUCCESSFULLY-RECEIVED"

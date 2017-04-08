@@ -13,16 +13,9 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <netinet/tcp.h>
-#include <netdb.h>// #include <conio.h>
-
-
-#define PROXY_SERVER_PORT_NO			5567
-#define QUIT_CONNECTION 				"QUIT"
-#define NEW_CONNECTION 					"NEW-CONNECTION"
-#define FILE_SUCCESSFULLY_RECEIVED		"FILE-SUCCESSFULLY-RECEIVED"
-
-#define BUFFER_SIZE                     1024
-#define MAXLINE                         1024
+#include <netdb.h>
+#include "dataStructures.h"
+#include "response.h"
 
 
 struct Details
@@ -169,13 +162,7 @@ int main(int argc, char* argv[] )
 }
 
 
-//****************** MAKE CONNECTION ******************//
-
-//int socket_connect(char *host, in_port_t port){
-//	return sock;
-//}
-
-
+// MARK: - Create Request
 //****************** CREATE REQUEST ******************//
 
 void *make_request(void *param)

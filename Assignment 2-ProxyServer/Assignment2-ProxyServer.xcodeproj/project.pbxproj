@@ -24,14 +24,14 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		0534B0E51E97E01900B7F11D /* response.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = response.h; sourceTree = "<group>"; };
 		0534B0E61E97E11A00B7F11D /* helpers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = helpers.h; sourceTree = "<group>"; };
 		0534B0E71E97E1BB00B7F11D /* requestHandlers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = requestHandlers.h; sourceTree = "<group>"; };
-		0534B0E81E97E26B00B7F11D /* dataStructures.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dataStructures.h; sourceTree = "<group>"; };
 		0541A10F1E919CC900F022F8 /* Assignment2-ProxyServer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Assignment2-ProxyServer"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0541A1121E919CCA00F022F8 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		055EB73C1E9326610041A77C /* index.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = index.html; sourceTree = "<group>"; };
 		055EB7411E932FF50041A77C /* ps.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ps.c; sourceTree = "<group>"; };
+		058F69231E9888A900E5209D /* dataStructures.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dataStructures.h; sourceTree = "<group>"; };
+		058F69241E9888A900E5209D /* response.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = response.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -64,15 +64,24 @@
 		0541A1111E919CC900F022F8 /* Assignment 2 */ = {
 			isa = PBXGroup;
 			children = (
+				058F69221E9888A900E5209D /* Common */,
 				055EB7411E932FF50041A77C /* ps.c */,
 				0541A1121E919CCA00F022F8 /* main.c */,
 				055EB73C1E9326610041A77C /* index.html */,
-				0534B0E51E97E01900B7F11D /* response.h */,
 				0534B0E61E97E11A00B7F11D /* helpers.h */,
 				0534B0E71E97E1BB00B7F11D /* requestHandlers.h */,
-				0534B0E81E97E26B00B7F11D /* dataStructures.h */,
 			);
 			path = "Assignment 2";
+			sourceTree = "<group>";
+		};
+		058F69221E9888A900E5209D /* Common */ = {
+			isa = PBXGroup;
+			children = (
+				058F69231E9888A900E5209D /* dataStructures.h */,
+				058F69241E9888A900E5209D /* response.h */,
+			);
+			name = Common;
+			path = ../../Common;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

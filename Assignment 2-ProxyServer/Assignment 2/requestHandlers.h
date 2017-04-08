@@ -76,16 +76,6 @@ static void handle_get_with_shared_memory (int connection_fd, const char* page)
             }
             else {
                 printf("Creating new shared memory segment\n");
-                if (pthread_mutex_init(&segptr->mutex, NULL) != 0) {
-                    perror("pthread_mutex_init() error");
-                }
-                if (pthread_cond_init(&segptr->cond, NULL) != 0) {
-                    perror("pthread_cond_init() error");
-                }
-                if (pthread_mutex_lock(&segptr->mutex) != 0) {
-                    perror("pthread_mutex_lock() error");
-                }
-
             }
             /* Attach (map) the shared memory segment into the current process */
             (segptr = (struct SharedMemory *)shmat(shmid, 0, 0));
@@ -94,11 +84,30 @@ static void handle_get_with_shared_memory (int connection_fd, const char* page)
                 exit(1);
             }
             
-            if (pthread_cond_wait(&segptr->cond, &segptr->mutex) != 0) {
-                perror("pthread_cond_timedwait() error");
+            if (pthread_mutexattr_init(&segptr->mutexAttr) != 0) {
+                perror("pthread_mutexattr_init() error");
             }
+            if (pthread_mutexattr_setpshared(&segptr->mutexAttr, PTHREAD_PROCESS_SHARED) != 0) {
+                perror("pthread_mutexattr_setpshared() error");
+            }
+            if (pthread_condattr_init(&segptr->condAttr) != 0) {
+                perror("pthread_condattr_init error ");
+            }
+            if (pthread_condattr_setpshared(&segptr->condAttr, PTHREAD_PROCESS_SHARED) != 0) {
+                perror("pthread_condattr_setpshared() error");
+            }
+            if (pthread_cond_init(&segptr->cond, &segptr->condAttr) != 0) {
+                perror("pthread_cond_init() error");
+            }
+            if (pthread_mutex_init(&segptr->mutex, &segptr->mutexAttr) != 0) {
+                perror("pthread_mutexattr_init() error");
+            }
+            if (pthread_mutex_lock(&segptr->mutex) != 0) {
+                perror("pthread_mutex_lock() error");
+            }
+            
 
-            strcpy(segptr->data, "Hello shared memory !");
+//            strcpy(segptr->data, "Hello shared memory !");
             
             
             //***********
@@ -138,23 +147,29 @@ static void handle_get_with_shared_memory (int connection_fd, const char* page)
             write(sd, completeRequest, strlen(completeRequest));
             bzero(buffer, BUFFER_SIZE);
             
-            long totalBytesRead = 0;
-            long bytesRead = read(sd, buffer, BUFFER_SIZE - 1);
-            while(bytesRead != 0 && bytesRead != -1){
-                write (connection_fd, buffer, BUFFER_SIZE - 1); // send data back to client
-                totalBytesRead += bytesRead;
-                //                    fprintf(stderr, "%s", buffer);
-                bzero(buffer, BUFFER_SIZE);
-                bytesRead = read(sd, buffer, BUFFER_SIZE - 1);
-            }
-            
-            printf("Total bytes received : %ld\n", totalBytesRead);
+//            long totalBytesRead = 0;
+//            long bytesRead = read(sd, buffer, BUFFER_SIZE - 1);
+//            while(bytesRead != 0 && bytesRead != -1){
+//                write (connection_fd, buffer, BUFFER_SIZE - 1); // send data back to client
+//                totalBytesRead += bytesRead;
+//                //                    fprintf(stderr, "%s", buffer);
+//                bzero(buffer, BUFFER_SIZE);
+//                bytesRead = read(sd, buffer, BUFFER_SIZE - 1);
+//            }
+//            
+//            printf("Total bytes received : %ld\n", totalBytesRead);
             
             shutdown(sd, SHUT_RDWR);
             close(sd);
             
             
-            write(connection_fd, segptr->data, strlen(segptr->data));
+            if (pthread_cond_wait(&segptr->cond, &segptr->mutex) != 0) {
+                perror("pthread_cond_timedwait() error");
+            }
+            write(connection_fd, segptr->data, strlen(segptr->data)); // read once the data is written
+            
+            shmctl(shmid, IPC_RMID, 0); // remove the shared memory segment
+
             
             //**********
         }

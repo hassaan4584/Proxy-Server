@@ -27,6 +27,8 @@
 		053F55971E94D38A00EBB05D /* Assignment2-Client */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Assignment2-Client"; sourceTree = BUILT_PRODUCTS_DIR; };
 		053F559A1E94D38A00EBB05D /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		053F55A11E94D39A00EBB05D /* c.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = c.c; sourceTree = "<group>"; };
+		058F69261E9888B900E5209D /* dataStructures.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dataStructures.h; sourceTree = "<group>"; };
+		058F69271E9888B900E5209D /* response.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = response.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -59,10 +61,21 @@
 		053F55991E94D38A00EBB05D /* Assignment2-Client */ = {
 			isa = PBXGroup;
 			children = (
+				058F69251E9888B900E5209D /* Common */,
 				053F55A11E94D39A00EBB05D /* c.c */,
 				053F559A1E94D38A00EBB05D /* main.c */,
 			);
 			path = "Assignment2-Client";
+			sourceTree = "<group>";
+		};
+		058F69251E9888B900E5209D /* Common */ = {
+			isa = PBXGroup;
+			children = (
+				058F69271E9888B900E5209D /* response.h */,
+				058F69261E9888B900E5209D /* dataStructures.h */,
+			);
+			name = Common;
+			path = ../../Common;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -253,6 +266,7 @@
 				053F55A01E94D38A00EBB05D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

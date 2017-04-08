@@ -13,7 +13,7 @@
 
 // MARK: - Constants
 
-#define PROXY_SERVER_PORT_NO			5567
+#define PROXY_SERVER_PORT_NO			5558
 #define SERVER_PORT_NO					PROXY_SERVER_PORT_NO + 100
 #define QUIT 							"QUIT"
 #define NEW_CONNECTION			 		"NEW-CONNECTION"
@@ -55,6 +55,8 @@ struct SharedMemory
 {
     pthread_cond_t cond;
     pthread_mutex_t mutex;
+    pthread_condattr_t condAttr;
+    pthread_mutexattr_t mutexAttr;
     bool hasFileCompletelyWritten;
     char data[BUFFER_SIZE];
 };

@@ -24,111 +24,11 @@
 #include <sys/stat.h>        /* For mode constants */
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include "dataStructures.h"
+#include "response.h"
 
 
-// MARK: - Constants
-#define PROXY_SERVER_PORT_NO            5567
-#define SERVER_PORT_NO					PROXY_SERVER_PORT_NO + 100
-#define QUIT 							"QUIT"
-#define NEW_CONNECTION			 		"NEW-CONNECTION"
-#define FILE_SUCCESSFULLY_RECEIVED		"FILE-SUCCESSFULLY-RECEIVED"
-#define BYTES                           1024
-#define MAX_THREAD_COUNT                1024
-#define BUFFER_SIZE                     1024
-#define SEGMENT_SIZE                    10
-#define FTOK_KEY                        "/Hassaan"
-
-pthread_cond_t cond[MAX_THREAD_COUNT];
-pthread_mutex_t mutex[MAX_THREAD_COUNT];
-char *ROOT;
-
-/* HTTP response and header for a successful request.  */
-
-static char* ok_response =
-"HTTP/1.0 200 OK\n"
-"Content-Type: text/html\n"
-"\n";
-//"<html>\n"
-//" <body>\n"
-//"  <h1>Server</h1>\n"
-//"  <p>This is the response from the server.</p>\n"
-//" </body>\n"
-//"</html>\n";
-
-/* HTTP response, header, and body indicating that the we didn't
- understand the request.  */
-
-static char* bad_request_response =
-"HTTP/1.0 400 Bad Request\n"
-"Content-type: text/html\n"
-"\n"
-"<html>\n"
-" <body>\n"
-"  <h1>Bad Request</h1>\n"
-"  <p>This server did not understand your request.</p>\n"
-" </body>\n"
-"</html>\n";
-
-/* HTTP response, header, and body template indicating that the
- requested document was not found.  */
-
-static char* not_found_response_template =
-"HTTP/1.0 404 Not Found\n"
-"Content-type: text/html\n"
-"\n"
-"<html>\n"
-" <body>\n"
-"  <h1>Not Found</h1>\n"
-"  <p>The requested URL %s was not found on this server.</p>\n"
-" </body>\n"
-"</html>\n";
-
-/* HTTP response, header, and body template indicating that the
- method was not understood.  */
-
-static char* bad_method_response_template =
-"HTTP/1.0 501 Method Not Implemented\n"
-"Content-type: text/html\n"
-"\n"
-"<html>\n"
-" <body>\n"
-"  <h1>Method Not Implemented</h1>\n"
-"  <p>The method %s is not implemented by this server.</p>\n"
-" </body>\n"
-"</html>\n";
-
-// MARK: - Data Structures
-
-
-struct Thread
-{
-	pthread_t threadId;
-	int threadNumber;
-	bool isFree;
-	int socketId; // client say iss socketID pay rabta krna hay
-};
-
-struct ThreadPoolManager
-{
-	struct Thread threadArr[MAX_THREAD_COUNT];
-	int totalThreadCount; 
-};
-
-struct SharedMemory
-{
-    pthread_cond_t cond;
-    pthread_mutex_t mutex;
-    bool hasFileCompletelyWritten;
-    char data[BUFFER_SIZE];
-};
-
-void *handle_request(void *param);
-void send_file(char *fileName, int new_sd);
 int createThreadPool(struct ThreadPoolManager *manager);
-
-int myReceive(int socket, char *arr, int length, int flag);
-int mySend(int socket, char *arr, int length, int flag);
-
 
 // MARK: - Main Function
 //****************** MAIN FUNCTION ******************//
@@ -172,6 +72,8 @@ int main()
 
 	return 0;
 }
+
+// MARK: - Handle Local Get
 //****************** HANDLE LOCAL GET REQUEST function ******************//
 
 static void handle_local_get (int connection_fd, const char* page)
@@ -244,6 +146,11 @@ static void handle_local_get (int connection_fd, const char* page)
             }
             
             strcpy(segptr->data, response);
+            sleep(1);
+            if (pthread_cond_signal(&segptr->cond) != 0) {
+                perror("pthread_cond_signal() error");
+            }
+
 
             /// ****************
             
@@ -340,6 +247,8 @@ static void handle_local_get (int connection_fd, const char* page)
     
 }
 
+
+// MARK: Handle Get Request
 //****************** HANDLE GET REQUEST function ******************//
 
 static void handle_get (int connection_fd, const char* page)

@@ -31,7 +31,7 @@ int getNextEmptyThreadNumber(struct ThreadPoolManager* poolManager, int nextThre
         return getNextEmptyThreadNumber(poolManager, 1, false);
     }
     else {
-        return 1;
+        return -1;
     }
     
 }

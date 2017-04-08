@@ -28,16 +28,18 @@
 #include "helpers.h"
 #include "dataStructures.h"
 #include "requestHandlers.h"
+#include "queue.h"
 
 
 
 
-void *handle_request(void *param);
-void send_file(char *fileName, int new_sd);
+//void *handle_request(void *param);
+//void send_file(char *fileName, int new_sd);
 int createThreadPool(struct ThreadPoolManager *manager);
 
 //int getNextEmptyThreadNumber(struct ThreadPoolManager* poolManager, int nextThreadNumber, bool force);
 //void parse_command_line_arguments(int argc, char* argv[]);
+Queue *waitingRequestQueue;
 
 
 // MARK: - Main Function
@@ -45,6 +47,7 @@ int createThreadPool(struct ThreadPoolManager *manager);
 
 int main(int argc, char* argv[] )
 {
+    waitingRequestQueue = newQueue();
     parse_command_line_arguments(argc, argv);
 	int threadCount = 0;
 	struct ThreadPoolManager tm;
@@ -74,6 +77,11 @@ int main(int argc, char* argv[] )
             error("Server. Could not accept the request");
             continue;
         }
+        if ((threadCount = getNextEmptyThreadNumber(&tm, threadCount, true)) == -1) {
+            perror("Unable to accept request");
+            queue_offer(waitingRequestQueue, &new_sd); 
+            continue;
+        }
         tm.threadArr[threadCount].socketId = new_sd;
         if (pthread_cond_signal(&cond[threadCount]) != 0) {
             perror("pthread_cond_signal() error");
@@ -82,7 +90,6 @@ int main(int argc, char* argv[] )
         if (threadCount == MAX_THREAD_COUNT) {
             threadCount = 0;
         }
-        threadCount = getNextEmptyThreadNumber(&tm, threadCount, true);
 	}
 
 	return 0;

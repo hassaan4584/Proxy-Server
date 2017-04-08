@@ -168,7 +168,14 @@ static void handle_get_with_shared_memory (int connection_fd, const char* page)
             }
             write(connection_fd, segptr->data, strlen(segptr->data)); // read once the data is written
             
-            shmctl(shmid, IPC_RMID, 0); // remove the shared memory segment
+            pthread_mutex_unlock(&segptr->mutex);
+            if (shmctl(shmid, IPC_RMID, 0) == -1) // remove the shared memory segment
+            {
+                perror("shmctl() error");
+            }
+            if (shmdt(segptr) == -1) {
+                perror("shmdt() error");
+            }
 
             
             //**********

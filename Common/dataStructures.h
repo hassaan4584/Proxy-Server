@@ -13,17 +13,14 @@
 
 // MARK: - Constants
 
-#define PROXY_SERVER_PORT_NO			5558
-#define SERVER_PORT_NO					PROXY_SERVER_PORT_NO + 100
-#define QUIT 							"QUIT"
-#define NEW_CONNECTION			 		"NEW-CONNECTION"
-#define FILE_SUCCESSFULLY_RECEIVED		"FILE-SUCCESSFULLY-RECEIVED"
-#define LOCAL_GET                       "LOCAL-GET"
-#define BYTES                           1024
-#define MAX_THREAD_COUNT                1024
-#define BUFFER_SIZE                     1024
-#define SEGMENT_SIZE                    10
-#define FTOK_KEY                        "/Hassaan"
+#define PROXY_SERVER_PORT_NO		5550
+#define SERVER_PORT_NO				PROXY_SERVER_PORT_NO + 100
+#define LOCAL_GET                   "LOCAL-GET"
+#define BYTES                       1024
+#define MAX_THREAD_COUNT            10
+#define BUFFER_SIZE                 1024
+#define SEGMENT_SIZE                10
+#define FTOK_KEY                    "/Hassaan"
 
 // MARK: - Global Variables
 
@@ -31,7 +28,6 @@ bool SHOULD_USE_SHARED_MEMORY = false;
 pthread_cond_t cond[MAX_THREAD_COUNT];
 pthread_mutex_t mutex[MAX_THREAD_COUNT];
 char *ROOT;
-
 
 
 // MARK: - Data Structures
@@ -62,3 +58,9 @@ struct SharedMemory
 };
 
 #endif /* dataStructures_h */
+
+
+
+
+
+

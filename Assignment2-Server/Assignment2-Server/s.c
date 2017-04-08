@@ -116,7 +116,7 @@ static void handle_local_get (int connection_fd, const char* page)
             /* Generate the response message.  */
             snprintf (response, sizeof (response), not_found_response_template, page);
             /* Send it to the client.  */
-            write (connection_fd, response, strlen (response));
+//            write (connection_fd, response, strlen (response));
             printf("Total Response sent : %ld\n", strlen(response));
             
             key_t key;
@@ -132,7 +132,10 @@ static void handle_local_get (int connection_fd, const char* page)
                 /* Segment probably already exists - try as a client */
                 if((shmid = shmget(key, SEGMENT_SIZE, 0)) == -1) {
                     perror("shmget");
-                    exit(1);
+                    if (pthread_cond_signal(&segptr->cond) != 0) {
+                        perror("pthread_cond_signal() error");
+                    }
+                    return;
                 }
 //            }
 //            else {
@@ -146,10 +149,12 @@ static void handle_local_get (int connection_fd, const char* page)
             }
             
             strcpy(segptr->data, response);
-            sleep(1);
+//            sleep(1);
             if (pthread_cond_signal(&segptr->cond) != 0) {
                 perror("pthread_cond_signal() error");
             }
+            shmctl(shmid, IPC_RMID, 0); // remove the shared memory segment
+            shmdt(segptr);
 
 
             /// ****************

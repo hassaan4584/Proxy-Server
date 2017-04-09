@@ -83,7 +83,7 @@ static void handle_get_with_shared_memory (int connection_fd, const char* page)
             /* Attach (map) the shared memory segment into the current process */
             (segptr = (struct SharedMemory *)shmat(shmid, 0, 0));
             if( segptr == (struct SharedMemory*)-1) {
-                perror("shmat");
+                perror("shmat() attaching error");
                 exit(1);
             }
             
@@ -173,15 +173,15 @@ static void handle_get_with_shared_memory (int connection_fd, const char* page)
             }
             write(connection_fd, segptr->data, strlen(segptr->data)); // read once the data is written
             
-            pthread_mutex_unlock(&segptr->mutex);
+//            pthread_mutex_unlock(&segptr->mutex);
             struct shmid_ds buff;
-            if (shmctl(shmid, IPC_STAT, &buff) == -1) {
-                perror("shmctl() error with IPC_STAT");
-            }
-            else if (shmctl(shmid, IPC_RMID, &buff) == -1) // remove the shared memory segment
-            {
-                perror("shmctl() error");
-            }
+//            if (shmctl(shmid, IPC_STAT, &buff) == -1) {
+//                perror("shmctl() error with IPC_STAT");
+//            }
+//            else if (shmctl(shmid, IPC_RMID, &buff) == -1) // remove the shared memory segment
+//            {
+//                perror("shmctl() error");
+//            }
             if (shmdt(segptr) == -1) {
                 perror("shmdt() error");
             }
@@ -395,11 +395,11 @@ void *handle_request(void *param)
         shutdown(new_sd, SHUT_RDWR);
         close(new_sd);
         
-//        if (!queue_isEmpty(waitingRequestsQueue)) {
-//            int *socketID = (int*) queue_poll(waitingRequestsQueue);
-//            threadDetails->socketId = *socketID;
-//        }
-//        else {
+        if (!queue_isEmpty(waitingRequestsQueue)) {
+            int *socketID = (int*) queue_poll(waitingRequestsQueue);
+            threadDetails->socketId = *socketID;
+        }
+        else {
             if (pthread_mutex_init(&mutex[threadDetails->threadNumber], NULL) != 0) {
                 perror("pthread_mutex_init() error");
             }
@@ -409,7 +409,7 @@ void *handle_request(void *param)
             if (pthread_mutex_lock(&mutex[threadDetails->threadNumber]) != 0) {
                 perror("pthread_mutex_lock() error");
             }
-//        }
+        }
 
         
     }

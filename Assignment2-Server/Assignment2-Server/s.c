@@ -194,7 +194,7 @@ static void handle_local_get (int connection_fd, const char* page)
             if (pthread_cond_signal(&segptr->cond) != 0) {
                 perror("pthread_cond_signal() error");
             }
-            shmctl(shmid, IPC_RMID, 0); // remove the shared memory segment
+//            shmctl(shmid, IPC_RMID, 0); // remove the shared memory segment
             shmdt(segptr);
 
 

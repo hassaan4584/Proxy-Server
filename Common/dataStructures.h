@@ -14,7 +14,7 @@
 
 // MARK: - Constants
 
-#define PROXY_SERVER_PORT_NO		5796
+#define PROXY_SERVER_PORT_NO		5798
 #define SERVER_PORT_NO				PROXY_SERVER_PORT_NO + 100
 #define LOCAL_GET                   "LOCAL-GET"
 #define BYTES                       1024

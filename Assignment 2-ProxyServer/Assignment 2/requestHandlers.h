@@ -14,7 +14,7 @@
 
 //****************** HANDLE GET REQUEST Via SHARED MEMORY function ******************//
 
-static void handle_get_with_shared_memory (int connection_fd, const char* page)
+static void handle_get_with_shared_memory (int connection_fd, const char* proxyBaseUrl, const char* page)
 {
     char data_to_send[BYTES];
     int fd;
@@ -61,10 +61,10 @@ static void handle_get_with_shared_memory (int connection_fd, const char* page)
             int   shmid;
             struct SharedMemory* segptr;
             
-            char charId[30];
-            sprintf(charId, "%d", connection_fd+1000);
+//            char charId[30];
+//            sprintf(charId, "%d", connection_fd+1000);
             /* Create unique key via call to ftok() */
-            key = ftok(strcat(charId, FTOK_KEY), 'S');
+            key = ftok("/Users/Hassaan/Desktop/ftok.txt", connection_fd);
 //            key = ftok(FTOK_KEY, 'S');
             
             if((shmid = shmget(key, SEGMENT_SIZE, IPC_CREAT|IPC_EXCL|0666)) == -1) {
@@ -116,7 +116,7 @@ static void handle_get_with_shared_memory (int connection_fd, const char* page)
             
             ///// ***********
             
-            char hostname[1024] = "127.0.0.1";
+            const char *hostname = proxyBaseUrl;
             struct hostent *hp;
             struct sockaddr_in addr;
             int on = 1;
@@ -146,7 +146,14 @@ static void handle_get_with_shared_memory (int connection_fd, const char* page)
             }
             
             char buffer[BUFFER_SIZE];
-            char completeRequest[1024] = "LOCAL-GET /index.html HTTP/1.0\r\n\r\n";
+            char completeRequest[1024] = "LOCAL-GET /index.html HTTP/1.0";
+            
+            strcat(completeRequest, "\r\n&key=");
+            char stringId[20];
+            snprintf(stringId, 20, "%d", key);
+
+            strcat(completeRequest, stringId);
+            strcat(completeRequest, "\r\n\r\n");
             
             write(sd, completeRequest, strlen(completeRequest));
             bzero(buffer, BUFFER_SIZE);
@@ -177,14 +184,14 @@ static void handle_get_with_shared_memory (int connection_fd, const char* page)
             send(connection_fd, segptr->data, strlen(segptr->data), 0); // read once the data is written
 
             pthread_mutex_unlock(&segptr->mutex);
-//            struct shmid_ds buff;
-//            if (shmctl(shmid, IPC_STAT, &buff) == -1) {
-//                perror("shmctl() error with IPC_STAT");
-//            }
-//            else if (shmctl(shmid, IPC_RMID, &buff) == -1) // remove the shared memory segment
-//            {
-//                perror("shmctl() error");
-//            }
+            struct shmid_ds buff;
+            if (shmctl(shmid, IPC_STAT, &buff) == -1) {
+                perror("shmctl() error with IPC_STAT");
+            }
+            if (shmctl(shmid, IPC_RMID, &buff) == -1) // remove the shared memory segment
+            {
+                perror("shmctl() error");
+            }
             if (shmdt(segptr) == -1) {
                 perror("shmdt() error");
             }
@@ -387,12 +394,18 @@ void *handle_request(void *param)
             }
             else {
                 /* A valid request.  Process it.  */
+                char baseURL[256] = "127.0.0.1";
+                char filepath[256] = "/index.html";
                 if (SHOULD_USE_SHARED_MEMORY) {
-                    handle_get_with_shared_memory(new_sd, url);
+                    if (strcmp (protocol, "HTTP/1.0") && strcmp (protocol, "HTTP/1.1")) {
+                        handle_get_with_shared_memory(new_sd, baseURL, url);
+                    }
+                    else {
+                        sscanf (proxyAddress, "%254[^'/']%s", baseURL, filepath);
+                        handle_get_with_shared_memory(new_sd, baseURL, filepath);
+                    }
                 }
                 else {
-                    char baseURL[256] = "127.0.0.1";
-                    char filepath[256] = "/index.html";
                     if (strcmp (protocol, "HTTP/1.0") && strcmp (protocol, "HTTP/1.1")) {
                         handle_get_with_sockets(new_sd, baseURL, url);
                     }

@@ -117,7 +117,7 @@ int main()
 // MARK: - Handle Local Get
 //****************** HANDLE LOCAL GET REQUEST function ******************//
 
-static void handle_local_get (int connection_fd, const char* page)
+static void handle_local_get (int connection_fd, const char* page, const char* key)
 {
     char data_to_send[BYTES];
     int fd;
@@ -160,21 +160,22 @@ static void handle_local_get (int connection_fd, const char* page)
 //            write (connection_fd, response, strlen (response));
             printf("Total Response sent : %ld\n", strlen(response));
             
-            key_t key;
+//            key_t key;
             int   shmid;
             struct SharedMemory* segptr;
             
             char charId[30];
             sprintf(charId, "%d", connection_fd+1000);
             /* Create unique key via call to ftok() */
-            key = ftok(strcat(charId, FTOK_KEY), 'S');
+//            key = ftok("/Users/Hassaan/Desktop/ftok.txt", connection_fd);
+//            key = ftok(strcat(charId, FTOK_KEY), 'S');
 //            key = ftok(FTOK_KEY, 'S');
             
 //            if((shmid = shmget(key, SEGMENT_SIZE, IPC_CREAT|IPC_EXCL|0666)) == -1) {
 //                printf("Shared memory segment exists - opening as client\n");
             
                 /* Segment probably already exists - try as a client */
-                if((shmid = shmget(key, SEGMENT_SIZE, 0)) == -1) {
+                if((shmid = shmget(atoi(key), SEGMENT_SIZE, 0)) == -1) {
                     perror("shmget");
                     if (pthread_cond_signal(&segptr->cond) != 0) {
                         perror("pthread_cond_signal() error");
@@ -513,8 +514,13 @@ void *handle_request(void *param)
             }
             else {
                 /* A valid request.  Process it.  */
+                char temp[256] = "127.0.0.1";
+                char key[256] ;
                 if (strcmp(method, "LOCAL-GET") == 0) {
-                    handle_local_get(new_sd, url);
+                    // if its a request from a local proxy server, we ll use shared memory to pass data between the two processses.
+                     // extracting key from the recceived request
+                    sscanf (buffer, "%254[^'=']=%s", temp, key);
+                    handle_local_get(new_sd, url, key);
                 }
                 else {
                     handle_get (new_sd, url);

@@ -451,6 +451,7 @@ void *handle_request(void *param)
         if (pthread_cond_wait(&cond[threadDetails->threadNumber], &mutex[threadDetails->threadNumber]) != 0) {
             perror("pthread_cond_timedwait() error");
         }
+    ReloadPendingRequest:
         threadDetails->isFree = false;
         
         int new_sd=threadDetails->socketId;
@@ -532,6 +533,7 @@ void *handle_request(void *param)
         if (!queue_isEmpty(waitingRequestsQueue)) {
             int *socketID = (int*) queue_poll(waitingRequestsQueue);
             threadDetails->socketId = *socketID;
+            goto ReloadPendingRequest;
         }
         else {
             if (pthread_mutex_init(&mutex[threadDetails->threadNumber], NULL) != 0) {

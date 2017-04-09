@@ -42,8 +42,8 @@ void parse_command_line_arguments(int argc, char* argv[] )
         SHOULD_USE_SHARED_MEMORY = atoi(argv[1]);
     }
     else {
-        fprintf(stderr, "Usage : ./%s <Should-use-shared-memory-optimization>\n", argv[0]);
-        fprintf(stderr, "Example Usage :./%s 1\n", argv[0]);
+        fprintf(stderr, "Usage : %s <Should-use-shared-memory-optimization>\n", argv[0]);
+        fprintf(stderr, "Example Usage : %s 1\n", argv[0]);
         exit(1);
     }
 }

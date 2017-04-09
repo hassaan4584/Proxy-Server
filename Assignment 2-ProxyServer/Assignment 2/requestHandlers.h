@@ -9,8 +9,7 @@
 #ifndef requestHandlers_h
 #define requestHandlers_h
 
-
-
+#include <time.h>
 
 
 //****************** HANDLE GET REQUEST Via SHARED MEMORY function ******************//
@@ -167,14 +166,18 @@ static void handle_get_with_shared_memory (int connection_fd, const char* page)
             shutdown(sd, SHUT_RDWR);
             close(sd);
             
-            
-            if (pthread_cond_wait(&segptr->cond, &segptr->mutex) != 0) {
+            struct timeval tv;
+            struct timespec ts;
+            gettimeofday(&tv, NULL);
+            ts.tv_sec = tv.tv_sec + 2;
+            ts.tv_nsec = 0;
+            if (pthread_cond_timedwait(&segptr->cond, &segptr->mutex, &ts) != 0) {
                 perror("pthread_cond_timedwait() error");
             }
             write(connection_fd, segptr->data, strlen(segptr->data)); // read once the data is written
-            
-//            pthread_mutex_unlock(&segptr->mutex);
-            struct shmid_ds buff;
+
+            pthread_mutex_unlock(&segptr->mutex);
+//            struct shmid_ds buff;
 //            if (shmctl(shmid, IPC_STAT, &buff) == -1) {
 //                perror("shmctl() error with IPC_STAT");
 //            }
@@ -316,7 +319,8 @@ void *handle_request(void *param)
         if (pthread_cond_wait(&cond[threadDetails->threadNumber], &mutex[threadDetails->threadNumber]) != 0) {
             perror("pthread_cond_timedwait() error");
         }
-        
+
+    ReloadPendingRequest:
         threadDetails->isFree = false;
         
         int new_sd=threadDetails->socketId;
@@ -398,6 +402,8 @@ void *handle_request(void *param)
         if (!queue_isEmpty(waitingRequestsQueue)) {
             int *socketID = (int*) queue_poll(waitingRequestsQueue);
             threadDetails->socketId = *socketID;
+            goto ReloadPendingRequest;
+
         }
         else {
             if (pthread_mutex_init(&mutex[threadDetails->threadNumber], NULL) != 0) {

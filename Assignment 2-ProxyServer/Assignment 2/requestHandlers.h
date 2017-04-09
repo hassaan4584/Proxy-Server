@@ -61,7 +61,7 @@ static void handle_get_with_shared_memory (int connection_fd, const char* page)
             int   shmid;
             struct SharedMemory* segptr;
             
-            char charId[20];
+            char charId[30];
             sprintf(charId, "%d", connection_fd+1000);
             /* Create unique key via call to ftok() */
             key = ftok(strcat(charId, FTOK_KEY), 'S');
@@ -174,7 +174,7 @@ static void handle_get_with_shared_memory (int connection_fd, const char* page)
             if (pthread_cond_timedwait(&segptr->cond, &segptr->mutex, &ts) != 0) {
                 perror("pthread_cond_timedwait() error");
             }
-            write(connection_fd, segptr->data, strlen(segptr->data)); // read once the data is written
+            send(connection_fd, segptr->data, strlen(segptr->data), 0); // read once the data is written
 
             pthread_mutex_unlock(&segptr->mutex);
 //            struct shmid_ds buff;
@@ -201,7 +201,7 @@ static void handle_get_with_shared_memory (int connection_fd, const char* page)
 }
 //****************** HANDLE GET REQUEST function ******************//
 
-static void handle_get_with_sockets (int connection_fd, const char* page)
+static void handle_get_with_sockets (int connection_fd, const char* proxyBaseUrl, const char* page)
 {
     char data_to_send[BYTES];
     int fd;
@@ -245,7 +245,7 @@ static void handle_get_with_sockets (int connection_fd, const char* page)
             
             ///// ***********
             
-            char hostname[1024] = "127.0.0.1";
+            const char *hostname = proxyBaseUrl;
             struct hostent *hp;
             struct sockaddr_in addr;
             int on = 1;
@@ -339,6 +339,7 @@ void *handle_request(void *param)
             char method[sizeof (buffer)];
             char url[sizeof (buffer)];
             char protocol[sizeof (buffer)];
+            char proxyAddress[sizeof (buffer)];
             
             /* Some data was read successfully.  NUL-terminate the buffer so
              we can use string operations on it.  */
@@ -346,7 +347,7 @@ void *handle_request(void *param)
             /* The first line the client sends is the HTTP request, which is
              composed of a method, the requested page, and the protocol
              version.  */
-            sscanf (buffer, "%s %s %s", method, url, protocol);
+            sscanf (buffer, "%s %s %s %s", method, url, proxyAddress, protocol);
             /* The client may send various header information following the
              request.  For this HTTP implementation, we don't care about it.
              However, we need to read any data the client tries to send.  Keep
@@ -363,10 +364,17 @@ void *handle_request(void *param)
             }
             /* Check the protocol field.  We understand HTTP versions 1.0 and
              1.1.  */
-            if (strcmp (protocol, "HTTP/1.0") && strcmp (protocol, "HTTP/1.1")) {
+            if ((strcmp (protocol, "HTTP/1.0") && strcmp (protocol, "HTTP/1.1")) &&
+                (strcmp (proxyAddress, "HTTP/1.0") && strcmp (proxyAddress, "HTTP/1.1"))) {
                 /* We don't understand this protocol.  Report a bad response.  */
-                write (new_sd, bad_request_response,
-                       sizeof (bad_request_response));
+                char response[1024];
+                
+                /* Generate the response message.  */
+                snprintf (response, sizeof (response), bad_request_response, url);
+                /* Send it to the client.  */
+                //            write (connection_fd, response, strlen (response));
+                write (new_sd, response,
+                       sizeof(response));
             }
             else if (strcmp (method, "GET")) {
                 /* This server only implements the GET method.  The client
@@ -383,7 +391,15 @@ void *handle_request(void *param)
                     handle_get_with_shared_memory(new_sd, url);
                 }
                 else {
-                    handle_get_with_sockets(new_sd, url);
+                    char baseURL[256] = "127.0.0.1";
+                    char filepath[256] = "/index.html";
+                    if (strcmp (protocol, "HTTP/1.0") && strcmp (protocol, "HTTP/1.1")) {
+                        handle_get_with_sockets(new_sd, baseURL, url);
+                    }
+                    else {
+                        sscanf (proxyAddress, "%254[^'/']%s", baseURL, filepath);
+                        handle_get_with_sockets(new_sd, baseURL, filepath);
+                    }
                 }
             }
         }

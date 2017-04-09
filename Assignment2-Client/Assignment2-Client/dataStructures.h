@@ -12,7 +12,7 @@
 
 // MARK: - Constants
 
-#define PROXY_SERVER_PORT_NO		5796
+#define PROXY_SERVER_PORT_NO		5743
 #define SERVER_PORT_NO				PROXY_SERVER_PORT_NO + 100
 #define LOCAL_GET                   "LOCAL-GET"
 #define BYTES                       1024
@@ -20,6 +20,7 @@
 #define BUFFER_SIZE                 1024
 #define SEGMENT_SIZE                10
 #define FTOK_KEY                    "/Hassaan"
+#define PROXY_IP_ADDRESS            "127.0.0.1"
 
 // MARK: - Global Variables
 

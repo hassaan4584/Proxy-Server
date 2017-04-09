@@ -164,8 +164,11 @@ static void handle_local_get (int connection_fd, const char* page)
             int   shmid;
             struct SharedMemory* segptr;
             
+            char charId[30];
+            sprintf(charId, "%d", connection_fd+1000);
             /* Create unique key via call to ftok() */
-            key = ftok(FTOK_KEY, 'S');
+            key = ftok(strcat(charId, FTOK_KEY), 'S');
+//            key = ftok(FTOK_KEY, 'S');
             
 //            if((shmid = shmget(key, SEGMENT_SIZE, IPC_CREAT|IPC_EXCL|0666)) == -1) {
 //                printf("Shared memory segment exists - opening as client\n");

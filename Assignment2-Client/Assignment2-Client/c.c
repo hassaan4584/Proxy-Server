@@ -113,7 +113,7 @@ int main(int argc, char* argv[] )
 	// }
        
 	// fd = socket_connect(argv[1], atoi(argv[2])); 
-	char hostname[1024] = "127.0.0.1";
+	char hostname[1024] = PROXY_IP_ADDRESS;
     struct hostent *hp;
     struct sockaddr_in addr;
     int on = 1;
@@ -171,10 +171,19 @@ void *make_request(void *param)
     if (details == NULL) {
         return NULL;
     }
-    
     int sd = details->socket_id;
     char buffer[BUFFER_SIZE];
-    char completeRequest[1024] = "GET /index.html HTTP/1.0\r\n\r\n";
+//    char completeRequest[1024] = "GET /index.html HTTP/1.0\r\n\r\n";
+    char completeRequest[1024] = "GET ";
+    strcat(completeRequest, PROXY_IP_ADDRESS);
+    strcat(completeRequest, " 127.0.0.1/index.html");
+    strcat(completeRequest, " HTTP/1.0");
+    
+    
+    strcat(completeRequest, "\r\nUser-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.11; rv:52.0) Gecko/20100101 Firefox/52.0");
+    strcat(completeRequest, "\r\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+    strcat(completeRequest, "\r\nConnection: keep-alive");
+    strcat(completeRequest, "\r\n\r\n");
     for (int i=0 ; i<details->requests_per_thread ; i++) {
         
         write(sd, completeRequest, strlen(completeRequest));

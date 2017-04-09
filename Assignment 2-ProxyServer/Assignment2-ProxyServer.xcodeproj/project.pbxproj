@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0541A1131E919CCA00F022F8 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 0541A1121E919CCA00F022F8 /* main.c */; };
 		055EB7421E932FF50041A77C /* ps.c in Sources */ = {isa = PBXBuildFile; fileRef = 055EB7411E932FF50041A77C /* ps.c */; };
 		058F69BA1E98A5C500E5209D /* queue.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 058F69B91E98A5C500E5209D /* queue.o */; };
 /* End PBXBuildFile section */
@@ -27,6 +28,7 @@
 		0534B0E61E97E11A00B7F11D /* helpers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = helpers.h; sourceTree = "<group>"; };
 		0534B0E71E97E1BB00B7F11D /* requestHandlers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = requestHandlers.h; sourceTree = "<group>"; };
 		0541A10F1E919CC900F022F8 /* Assignment2-ProxyServer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Assignment2-ProxyServer"; sourceTree = BUILT_PRODUCTS_DIR; };
+		0541A1121E919CCA00F022F8 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		055EB73C1E9326610041A77C /* index.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = index.html; sourceTree = "<group>"; };
 		055EB7411E932FF50041A77C /* ps.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ps.c; sourceTree = "<group>"; };
 		058F69231E9888A900E5209D /* dataStructures.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dataStructures.h; sourceTree = "<group>"; };
@@ -103,6 +105,7 @@
 				058F69781E98A24F00E5209D /* Cross compiling */,
 				058F69221E9888A900E5209D /* Common */,
 				055EB7411E932FF50041A77C /* ps.c */,
+				0541A1121E919CCA00F022F8 /* main.c */,
 				055EB73C1E9326610041A77C /* index.html */,
 				0534B0E61E97E11A00B7F11D /* helpers.h */,
 				0534B0E71E97E1BB00B7F11D /* requestHandlers.h */,
@@ -237,6 +240,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0541A1131E919CCA00F022F8 /* main.c in Sources */,
 				055EB7421E932FF50041A77C /* ps.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

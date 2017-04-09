@@ -1,14 +1,6 @@
-//
-//  s.c
-//  Assignment2-Server
-//
-//  Created by Hassaan on 07/04/2017.
-//  Copyright © 2017 HaigaTech. All rights reserved.
-//
 // For creating the response, some help and code has been taken
 // from the following link : advancedlinuxprogramming.com/listings/chapter-11/server.c
-// For implementing queue, library has been taken
-// from the following link : https://github.com/ClickerMonkey/CDSL
+
 
 #ifdef __APPLE__
 #  define error printf
@@ -34,38 +26,15 @@
 #include <sys/shm.h>
 #include "dataStructures.h"
 #include "response.h"
-#include "queue.h"
-
 
 
 int createThreadPool(struct ThreadPoolManager *manager);
-int getNextEmptyThreadNumber(struct ThreadPoolManager* poolManager, int nextThreadNumber, bool force) {
-    
-    if (poolManager->threadArr[nextThreadNumber].isFree == true) {
-        return nextThreadNumber; // the next thread is free
-    }
-    for (int i=(nextThreadNumber+1)%MAX_THREAD_COUNT ; i != nextThreadNumber ; i = (i+1)%MAX_THREAD_COUNT) {
-        if (poolManager->threadArr[i].isFree == true) {
-            return i;
-        }
-    }
-    sleep(1);
-    if (force) {
-        return getNextEmptyThreadNumber(poolManager, 1, false);
-    }
-    else {
-        return -1;
-    }
-    
-}
-
 
 // MARK: - Main Function
 //****************** MAIN FUNCTION ******************//
 
 int main()
 {
-    waitingRequestsQueue = newQueue();
 	int threadCount = 0;
 	struct ThreadPoolManager tm;
     ROOT = getenv("PWD");
@@ -80,9 +49,7 @@ int main()
 		error("Server failed to bind\n");
         exit(2);
 	}
-    if (listen(s_id,2) == -1) {
-        perror("Server. Could not listen");
-    }
+	listen(s_id,2); 
 	unsigned int size = sizeof (struct sockaddr_in);
 
 	int new_sd=0;
@@ -96,19 +63,11 @@ int main()
             error("Server. Could not accept the request");
             continue;
         }
-        if ((threadCount = getNextEmptyThreadNumber(&tm, threadCount, true)) == -1) {
-            perror("Unable to accept request");
-            queue_offer(waitingRequestsQueue, &new_sd);
-            continue;
-        }
         tm.threadArr[threadCount].socketId = new_sd;
         if (pthread_cond_signal(&cond[threadCount]) != 0) {
             perror("pthread_cond_signal() error");
         }
 		threadCount++;
-        if (threadCount >= MAX_THREAD_COUNT) {
-            threadCount = 0;
-        }
 	}
 
 	return 0;
@@ -445,108 +404,86 @@ void *handle_request(void *param)
 	printf("\nTerminating worker thread \n");
 		return NULL;
 	}
+
+	if (pthread_cond_wait(&cond[threadDetails->threadNumber], &mutex[threadDetails->threadNumber]) != 0) {
+	    perror("pthread_cond_timedwait() error");
+	}
+
+	int new_sd=threadDetails->socketId;
+	char welcome[1024] = "***** Worker thread number : ";
+	printf("%s %d  *****\n", welcome, threadDetails->threadNumber);
+	
+
+///*******************
     
-    while (true) {
-        threadDetails->isFree = true;
-        if (pthread_cond_wait(&cond[threadDetails->threadNumber], &mutex[threadDetails->threadNumber]) != 0) {
-            perror("pthread_cond_timedwait() error");
+    char buffer[256];
+    ssize_t bytes_read;
+    
+    /* Read some data from the client.  */
+    bytes_read = read (new_sd, buffer, sizeof (buffer) - 1);
+    if (bytes_read > 0) {
+        char method[sizeof (buffer)];
+        char url[sizeof (buffer)];
+        char protocol[sizeof (buffer)];
+        
+        /* Some data was read successfully.  NUL-terminate the buffer so
+         we can use string operations on it.  */
+        buffer[bytes_read] = '\0';
+        /* The first line the client sends is the HTTP request, which is
+         composed of a method, the requested page, and the protocol
+         version.  */
+        sscanf (buffer, "%s %s %s", method, url, protocol);
+        /* The client may send various header information following the
+         request.  For this HTTP implementation, we don't care about it.
+         However, we need to read any data the client tries to send.  Keep
+         on reading data until we get to the end of the header, which is
+         delimited by a blank line.  HTTP specifies CR/LF as the line
+         delimiter.  */
+        while (strstr (buffer, "\r\n\r\n") == NULL)
+            bytes_read = read (new_sd, buffer, sizeof (buffer));
+        /* Make sure the last read didn't fail.  If it did, there's a
+         problem with the connection, so give up.  */
+        if (bytes_read == -1) {
+            close (new_sd);
+            return NULL;
         }
-        threadDetails->isFree = false;
-        
-        int new_sd=threadDetails->socketId;
-        char welcome[1024] = "***** Worker thread number : ";
-        printf("%s %d  *****\n", welcome, threadDetails->threadNumber);
-        
-        
-        ///*******************
-        
-        char buffer[256];
-        ssize_t bytes_read;
-        
-        /* Read some data from the client.  */
-        bytes_read = read (new_sd, buffer, sizeof (buffer) - 1);
-        if (bytes_read > 0) {
-            char method[sizeof (buffer)];
-            char url[sizeof (buffer)];
-            char protocol[sizeof (buffer)];
+        /* Check the protocol field.  We understand HTTP versions 1.0 and
+         1.1.  */
+        if (strcmp (protocol, "HTTP/1.0") && strcmp (protocol, "HTTP/1.1")) {
+            /* We don't understand this protocol.  Report a bad response.  */
+            write (new_sd, bad_request_response,
+                   sizeof (bad_request_response));
+        }
+        else if (strcmp (method, "GET") && strcmp(method, "LOCAL-GET")) {
+            /* This server only implements the GET method.  The client
+             specified some other method, so report the failure.  */
+            char response[1024];
             
-            /* Some data was read successfully.  NUL-terminate the buffer so
-             we can use string operations on it.  */
-            buffer[bytes_read] = '\0';
-            /* The first line the client sends is the HTTP request, which is
-             composed of a method, the requested page, and the protocol
-             version.  */
-            sscanf (buffer, "%s %s %s", method, url, protocol);
-            /* The client may send various header information following the
-             request.  For this HTTP implementation, we don't care about it.
-             However, we need to read any data the client tries to send.  Keep
-             on reading data until we get to the end of the header, which is
-             delimited by a blank line.  HTTP specifies CR/LF as the line
-             delimiter.  */
-            while (strstr (buffer, "\r\n\r\n") == NULL)
-                bytes_read = read (new_sd, buffer, sizeof (buffer));
-            /* Make sure the last read didn't fail.  If it did, there's a
-             problem with the connection, so give up.  */
-            if (bytes_read == -1) {
-                close (new_sd);
-                return NULL;
-            }
-            /* Check the protocol field.  We understand HTTP versions 1.0 and
-             1.1.  */
-            if (strcmp (protocol, "HTTP/1.0") && strcmp (protocol, "HTTP/1.1")) {
-                /* We don't understand this protocol.  Report a bad response.  */
-                write (new_sd, bad_request_response,
-                       sizeof (bad_request_response));
-            }
-            else if (strcmp (method, "GET") && strcmp(method, "LOCAL-GET")) {
-                /* This server only implements the GET method.  The client
-                 specified some other method, so report the failure.  */
-                char response[1024];
-                
-                snprintf (response, sizeof (response),
-                          bad_method_response_template, method);
-                write (new_sd, response, strlen (response));
-            }
-            else {
-                /* A valid request.  Process it.  */
-                if (strcmp(method, "LOCAL-GET") == 0) {
-                    handle_local_get(new_sd, url);
-                }
-                else {
-                    handle_get (new_sd, url);
-                }
-            }
-        }
-        else if (bytes_read == 0)
-        /* The client closed the connection before sending any data.
-         Nothing to do.  */
-            ;
-        else
-        /* The call to read failed.  */
-            perror ("read");
-        
-        // *******************
-        shutdown(new_sd, SHUT_RDWR);
-        close(new_sd);
-    
-        if (!queue_isEmpty(waitingRequestsQueue)) {
-            int *socketID = (int*) queue_poll(waitingRequestsQueue);
-            threadDetails->socketId = *socketID;
+            snprintf (response, sizeof (response),
+                      bad_method_response_template, method);
+            write (new_sd, response, strlen (response));
         }
         else {
-            if (pthread_mutex_init(&mutex[threadDetails->threadNumber], NULL) != 0) {
-                perror("pthread_mutex_init() error");
+            /* A valid request.  Process it.  */
+            if (strcmp(method, "LOCAL-GET") == 0) {
+                handle_local_get(new_sd, url);
             }
-            if (pthread_cond_init(&cond[threadDetails->threadNumber], NULL) != 0) {
-                perror("pthread_cond_init() error");
-            }
-            if (pthread_mutex_lock(&mutex[threadDetails->threadNumber]) != 0) {
-                perror("pthread_mutex_lock() error");
+            else {
+                handle_get (new_sd, url);
             }
         }
-  
     }
+    else if (bytes_read == 0)
+    /* The client closed the connection before sending any data.
+     Nothing to do.  */
+        ;
+    else 
+    /* The call to read failed.  */
+        perror ("read");
 
+    // *******************
+    shutdown(new_sd, SHUT_RDWR);
+    close(new_sd);
 
 	printf("Terminating worker thread no : %d\n\n", threadDetails->threadNumber);
 	return NULL;

@@ -9,12 +9,11 @@
 #ifndef dataStructures_h
 #define dataStructures_h
 
-#include "queue.h"
 
 
 // MARK: - Constants
 
-#define PROXY_SERVER_PORT_NO		5796
+#define PROXY_SERVER_PORT_NO		5550
 #define SERVER_PORT_NO				PROXY_SERVER_PORT_NO + 100
 #define LOCAL_GET                   "LOCAL-GET"
 #define BYTES                       1024
@@ -29,7 +28,6 @@ bool SHOULD_USE_SHARED_MEMORY = false;
 pthread_cond_t cond[MAX_THREAD_COUNT];
 pthread_mutex_t mutex[MAX_THREAD_COUNT];
 char *ROOT;
-Queue *waitingRequestsQueue;
 
 
 // MARK: - Data Structures

@@ -21,7 +21,7 @@ int getNextEmptyThreadNumber(struct ThreadPoolManager* poolManager, int nextThre
     if (poolManager->threadArr[nextThreadNumber].isFree == true) {
         return nextThreadNumber; // the next thread is free
     }
-    for (int i=(nextThreadNumber+1)%MAX_THREAD_COUNT ; i != nextThreadNumber ; i++) {
+    for (int i=(nextThreadNumber+1)%MAX_THREAD_COUNT ; i != nextThreadNumber ; i = (i+1)%MAX_THREAD_COUNT) {
         if (poolManager->threadArr[i].isFree == true) {
             return i;
         }

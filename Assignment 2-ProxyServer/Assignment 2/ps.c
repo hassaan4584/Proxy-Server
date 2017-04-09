@@ -39,7 +39,6 @@ int createThreadPool(struct ThreadPoolManager *manager);
 
 //int getNextEmptyThreadNumber(struct ThreadPoolManager* poolManager, int nextThreadNumber, bool force);
 //void parse_command_line_arguments(int argc, char* argv[]);
-Queue *waitingRequestQueue;
 
 
 // MARK: - Main Function
@@ -47,7 +46,7 @@ Queue *waitingRequestQueue;
 
 int main(int argc, char* argv[] )
 {
-    waitingRequestQueue = newQueue();
+    waitingRequestsQueue = newQueue();
     parse_command_line_arguments(argc, argv);
 	int threadCount = 0;
 	struct ThreadPoolManager tm;
@@ -79,7 +78,7 @@ int main(int argc, char* argv[] )
         }
         if ((threadCount = getNextEmptyThreadNumber(&tm, threadCount, true)) == -1) {
             perror("Unable to accept request");
-            queue_offer(waitingRequestQueue, &new_sd); 
+            queue_offer(waitingRequestsQueue, &new_sd);
             continue;
         }
         tm.threadArr[threadCount].socketId = new_sd;
@@ -87,7 +86,7 @@ int main(int argc, char* argv[] )
             perror("pthread_cond_signal() error");
         }
 		threadCount++;
-        if (threadCount == MAX_THREAD_COUNT) {
+        if (threadCount >= MAX_THREAD_COUNT) {
             threadCount = 0;
         }
 	}

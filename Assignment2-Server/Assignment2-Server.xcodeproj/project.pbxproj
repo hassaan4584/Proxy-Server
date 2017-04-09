@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		053F55B01E95281C00EBB05D /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 053F55AF1E95281C00EBB05D /* main.c */; };
+		050660471E99BECA00E36681 /* queue.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 050660461E99BECA00E36681 /* queue.o */; };
 		053F55B71E9530C300EBB05D /* s.c in Sources */ = {isa = PBXBuildFile; fileRef = 053F55B61E9530C300EBB05D /* s.c */; };
 /* End PBXBuildFile section */
 
@@ -24,11 +24,46 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		050660461E99BECA00E36681 /* queue.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = queue.o; sourceTree = "<group>"; };
 		053F55AC1E95281C00EBB05D /* Assignment2-Server */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Assignment2-Server"; sourceTree = BUILT_PRODUCTS_DIR; };
-		053F55AF1E95281C00EBB05D /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		053F55B61E9530C300EBB05D /* s.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = s.c; sourceTree = "<group>"; };
 		058F69291E9889B200E5209D /* dataStructures.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dataStructures.h; sourceTree = "<group>"; };
 		058F692A1E9889B200E5209D /* response.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = response.h; sourceTree = "<group>"; };
+		058F69CD1E990EF800E5209D /* adeque.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = adeque.h; sourceTree = "<group>"; };
+		058F69CE1E990EF800E5209D /* alist.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = alist.h; sourceTree = "<group>"; };
+		058F69CF1E990EF800E5209D /* aqueue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = aqueue.h; sourceTree = "<group>"; };
+		058F69D01E990EF800E5209D /* array2d.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = array2d.h; sourceTree = "<group>"; };
+		058F69D11E990EF800E5209D /* astack.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = astack.h; sourceTree = "<group>"; };
+		058F69D21E990EF800E5209D /* binarytree.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = binarytree.h; sourceTree = "<group>"; };
+		058F69D31E990EF800E5209D /* hashtable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = hashtable.h; sourceTree = "<group>"; };
+		058F69D41E990EF800E5209D /* line.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = line.h; sourceTree = "<group>"; };
+		058F69D51E990EF800E5209D /* list.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = list.h; sourceTree = "<group>"; };
+		058F69D61E990EF800E5209D /* maxheap.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = maxheap.h; sourceTree = "<group>"; };
+		058F69D71E990EF800E5209D /* minheap.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = minheap.h; sourceTree = "<group>"; };
+		058F69D81E990EF800E5209D /* plane.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = plane.h; sourceTree = "<group>"; };
+		058F69D91E990EF800E5209D /* queue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = queue.h; sourceTree = "<group>"; };
+		058F69DA1E990EF800E5209D /* stack.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = stack.h; sourceTree = "<group>"; };
+		058F69DB1E990EF800E5209D /* transform.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = transform.h; sourceTree = "<group>"; };
+		058F69DC1E990EF800E5209D /* util.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = util.h; sourceTree = "<group>"; };
+		058F69DD1E990EF800E5209D /* vector.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = vector.h; sourceTree = "<group>"; };
+		058F69DF1E990EF800E5209D /* adeque.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = adeque.c; sourceTree = "<group>"; };
+		058F69E01E990EF800E5209D /* alist.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = alist.c; sourceTree = "<group>"; };
+		058F69E11E990EF800E5209D /* aqueue.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = aqueue.c; sourceTree = "<group>"; };
+		058F69E21E990EF800E5209D /* array2d.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = array2d.c; sourceTree = "<group>"; };
+		058F69E31E990EF800E5209D /* astack.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = astack.c; sourceTree = "<group>"; };
+		058F69E41E990EF800E5209D /* binarytree.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = binarytree.c; sourceTree = "<group>"; };
+		058F69E51E990EF800E5209D /* examples.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = examples.c; sourceTree = "<group>"; };
+		058F69E61E990EF800E5209D /* hashtable.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = hashtable.c; sourceTree = "<group>"; };
+		058F69E71E990EF800E5209D /* line.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = line.c; sourceTree = "<group>"; };
+		058F69E81E990EF800E5209D /* list.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = list.c; sourceTree = "<group>"; };
+		058F69E91E990EF800E5209D /* maxheap.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = maxheap.c; sourceTree = "<group>"; };
+		058F69EA1E990EF800E5209D /* minheap.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = minheap.c; sourceTree = "<group>"; };
+		058F69EB1E990EF800E5209D /* plane.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = plane.c; sourceTree = "<group>"; };
+		058F69EC1E990EF800E5209D /* queue.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = queue.c; sourceTree = "<group>"; };
+		058F69ED1E990EF800E5209D /* stack.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = stack.c; sourceTree = "<group>"; };
+		058F69EE1E990EF800E5209D /* transform.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = transform.c; sourceTree = "<group>"; };
+		058F69EF1E990EF800E5209D /* util.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = util.c; sourceTree = "<group>"; };
+		058F69F01E990EF800E5209D /* vector.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = vector.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -36,6 +71,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				050660471E99BECA00E36681 /* queue.o in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -61,9 +97,11 @@
 		053F55AE1E95281C00EBB05D /* Assignment2-Server */ = {
 			isa = PBXGroup;
 			children = (
+				058F69BB1E990EF800E5209D /* CrossCompilations */,
+				058F69CC1E990EF800E5209D /* headers */,
+				058F69DE1E990EF800E5209D /* lib */,
 				058F69281E9889B200E5209D /* Common */,
 				053F55B61E9530C300EBB05D /* s.c */,
-				053F55AF1E95281C00EBB05D /* main.c */,
 			);
 			path = "Assignment2-Server";
 			sourceTree = "<group>";
@@ -76,6 +114,63 @@
 			);
 			name = Common;
 			path = ../../Common;
+			sourceTree = "<group>";
+		};
+		058F69BB1E990EF800E5209D /* CrossCompilations */ = {
+			isa = PBXGroup;
+			children = (
+				050660461E99BECA00E36681 /* queue.o */,
+			);
+			path = CrossCompilations;
+			sourceTree = "<group>";
+		};
+		058F69CC1E990EF800E5209D /* headers */ = {
+			isa = PBXGroup;
+			children = (
+				058F69CD1E990EF800E5209D /* adeque.h */,
+				058F69CE1E990EF800E5209D /* alist.h */,
+				058F69CF1E990EF800E5209D /* aqueue.h */,
+				058F69D01E990EF800E5209D /* array2d.h */,
+				058F69D11E990EF800E5209D /* astack.h */,
+				058F69D21E990EF800E5209D /* binarytree.h */,
+				058F69D31E990EF800E5209D /* hashtable.h */,
+				058F69D41E990EF800E5209D /* line.h */,
+				058F69D51E990EF800E5209D /* list.h */,
+				058F69D61E990EF800E5209D /* maxheap.h */,
+				058F69D71E990EF800E5209D /* minheap.h */,
+				058F69D81E990EF800E5209D /* plane.h */,
+				058F69D91E990EF800E5209D /* queue.h */,
+				058F69DA1E990EF800E5209D /* stack.h */,
+				058F69DB1E990EF800E5209D /* transform.h */,
+				058F69DC1E990EF800E5209D /* util.h */,
+				058F69DD1E990EF800E5209D /* vector.h */,
+			);
+			path = headers;
+			sourceTree = "<group>";
+		};
+		058F69DE1E990EF800E5209D /* lib */ = {
+			isa = PBXGroup;
+			children = (
+				058F69DF1E990EF800E5209D /* adeque.c */,
+				058F69E01E990EF800E5209D /* alist.c */,
+				058F69E11E990EF800E5209D /* aqueue.c */,
+				058F69E21E990EF800E5209D /* array2d.c */,
+				058F69E31E990EF800E5209D /* astack.c */,
+				058F69E41E990EF800E5209D /* binarytree.c */,
+				058F69E51E990EF800E5209D /* examples.c */,
+				058F69E61E990EF800E5209D /* hashtable.c */,
+				058F69E71E990EF800E5209D /* line.c */,
+				058F69E81E990EF800E5209D /* list.c */,
+				058F69E91E990EF800E5209D /* maxheap.c */,
+				058F69EA1E990EF800E5209D /* minheap.c */,
+				058F69EB1E990EF800E5209D /* plane.c */,
+				058F69EC1E990EF800E5209D /* queue.c */,
+				058F69ED1E990EF800E5209D /* stack.c */,
+				058F69EE1E990EF800E5209D /* transform.c */,
+				058F69EF1E990EF800E5209D /* util.c */,
+				058F69F01E990EF800E5209D /* vector.c */,
+			);
+			path = lib;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -137,7 +232,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				053F55B71E9530C300EBB05D /* s.c in Sources */,
-				053F55B01E95281C00EBB05D /* main.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

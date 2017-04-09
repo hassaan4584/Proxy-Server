@@ -62,8 +62,11 @@ static void handle_get_with_shared_memory (int connection_fd, const char* page)
             int   shmid;
             struct SharedMemory* segptr;
             
+            char charId[20];
+            sprintf(charId, "%d", connection_fd+1000);
             /* Create unique key via call to ftok() */
-            key = ftok(FTOK_KEY, 'S');
+            key = ftok(strcat(charId, FTOK_KEY), 'S');
+//            key = ftok(FTOK_KEY, 'S');
             
             if((shmid = shmget(key, SEGMENT_SIZE, IPC_CREAT|IPC_EXCL|0666)) == -1) {
                 printf("Shared memory segment exists - opening as client\n");
@@ -138,6 +141,8 @@ static void handle_get_with_shared_memory (int connection_fd, const char* page)
             }
             if(connect(sd, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) == -1){
                 perror("error on connect... \nSkipping");
+                shutdown(sd, SHUT_RDWR);
+                close(sd);
                 return;
             }
             
@@ -169,12 +174,19 @@ static void handle_get_with_shared_memory (int connection_fd, const char* page)
             write(connection_fd, segptr->data, strlen(segptr->data)); // read once the data is written
             
             pthread_mutex_unlock(&segptr->mutex);
-            if (shmctl(shmid, IPC_RMID, 0) == -1) // remove the shared memory segment
+            struct shmid_ds buff;
+            if (shmctl(shmid, IPC_STAT, &buff) == -1) {
+                perror("shmctl() error with IPC_STAT");
+            }
+            else if (shmctl(shmid, IPC_RMID, &buff) == -1) // remove the shared memory segment
             {
                 perror("shmctl() error");
             }
             if (shmdt(segptr) == -1) {
                 perror("shmdt() error");
+            }
+            else {
+                printf("Deleting shared memory segment\n");
             }
 
             
@@ -254,6 +266,8 @@ static void handle_get_with_sockets (int connection_fd, const char* page)
             }
             if(connect(sd, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) == -1){
                 perror("error on connect... \nSkipping");
+                shutdown(sd, SHUT_RDWR);
+                close(sd);
                 return;
             }
             
@@ -297,7 +311,6 @@ void *handle_request(void *param)
     }
     
     while (true) {
-        
         
         threadDetails->isFree = true;
         if (pthread_cond_wait(&cond[threadDetails->threadNumber], &mutex[threadDetails->threadNumber]) != 0) {
@@ -382,15 +395,22 @@ void *handle_request(void *param)
         shutdown(new_sd, SHUT_RDWR);
         close(new_sd);
         
-        if (pthread_mutex_init(&mutex[threadDetails->threadNumber], NULL) != 0) {
-            perror("pthread_mutex_init() error");
-        }
-        if (pthread_cond_init(&cond[threadDetails->threadNumber], NULL) != 0) {
-            perror("pthread_cond_init() error");
-        }
-        if (pthread_mutex_lock(&mutex[threadDetails->threadNumber]) != 0) {
-            perror("pthread_mutex_lock() error");
-        }
+//        if (!queue_isEmpty(waitingRequestsQueue)) {
+//            int *socketID = (int*) queue_poll(waitingRequestsQueue);
+//            threadDetails->socketId = *socketID;
+//        }
+//        else {
+            if (pthread_mutex_init(&mutex[threadDetails->threadNumber], NULL) != 0) {
+                perror("pthread_mutex_init() error");
+            }
+            if (pthread_cond_init(&cond[threadDetails->threadNumber], NULL) != 0) {
+                perror("pthread_cond_init() error");
+            }
+            if (pthread_mutex_lock(&mutex[threadDetails->threadNumber]) != 0) {
+                perror("pthread_mutex_lock() error");
+            }
+//        }
+
         
     }
     

@@ -9,8 +9,6 @@
 #ifndef dataStructures_h
 #define dataStructures_h
 
-#include "queue.h"
-
 
 // MARK: - Constants
 
@@ -29,7 +27,6 @@ bool SHOULD_USE_SHARED_MEMORY = false;
 pthread_cond_t cond[MAX_THREAD_COUNT];
 pthread_mutex_t mutex[MAX_THREAD_COUNT];
 char *ROOT;
-Queue *waitingRequestsQueue;
 
 
 // MARK: - Data Structures

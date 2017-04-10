@@ -36,9 +36,6 @@ static void handle_get_with_shared_memory (int connection_fd, const char* proxyB
             // removing the "/" on the first index
             memmove (file_name, file_name+1, strlen (file_name+1) + 1);
         }
-        //        strcpy(path, ROOT);
-        //        strcpy(&path[strlen(ROOT)], page);
-        
         if ( (fd=open(file_name, O_RDONLY))!=-1 )    //FILE FOUND
         {
             write (connection_fd, ok_response, strlen (ok_response));
@@ -139,7 +136,10 @@ static void handle_get_with_shared_memory (int connection_fd, const char* proxyB
             }
             
             char buffer[BUFFER_SIZE];
-            char completeRequest[1024] = "LOCAL-GET /index.html HTTP/1.0";
+            char completeRequest[1024] = "LOCAL-GET ";
+
+            strcat(completeRequest, page);
+            strcat(completeRequest, " HTTP/1.0");
             
             strcat(completeRequest, "\r\n&fileName=");
             char stringId[1024];

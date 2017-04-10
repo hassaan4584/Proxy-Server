@@ -59,6 +59,11 @@ int getNextEmptyThreadNumber(struct ThreadPoolManager* poolManager, int nextThre
     
 }
 
+int send_data_using_shared_memory(const char *ftokFileName, const char* threadNoAsKey, const char* data, size_t length) {
+    
+    return 0;
+}
+
 
 // MARK: - Main Function
 //****************** MAIN FUNCTION ******************//
@@ -119,15 +124,34 @@ int main()
 
 static void handle_local_get (int connection_fd, const char* page, const char* ftokFileName, const char* threadNoAsKey)
 {
-    char data_to_send[BYTES];
+    char data_to_send[BYTES+1];
     int fd;
     long bytes_read;
     /* Make sure the requested page begins with a slash and does not
      contain any additional slashes -- we don't support any
      subdirectories.  */
     if (*page == '/' && strchr (page + 1, '/') == NULL) {
-        char file_name[1024];
         
+        // If the request is valid we attach the passed shared memory segment
+        key_t intKey;
+        int   shmid;
+        struct SharedMemory* segptr;
+        /* Create unique key via call to ftok() */
+        intKey = ftok(ftokFileName, atoi(threadNoAsKey));
+        /* Segment probably already exists - try as a client */
+        if((shmid = shmget(intKey, SEGMENT_SIZE, 0)) == -1) {
+            perror("shmget");
+            return;
+        }
+        /* Attach (map) the shared memory segment into the current process */
+        (segptr = (struct SharedMemory *)shmat(shmid, 0, 0));
+        if( segptr == (struct SharedMemory*)-1) {
+            perror("shmat");
+            return;
+        }
+
+        
+        char file_name[1024];
         
         if ( strncmp(page, "/\0", 2)==0 ) {
             snprintf (file_name, sizeof ("index.html"), "index.html");
@@ -138,56 +162,57 @@ static void handle_local_get (int connection_fd, const char* page, const char* f
             // removing the "/" on the first index
             memmove (file_name, file_name+1, strlen (file_name+1) + 1);
         }
-        //        strcpy(path, ROOT);
-        //        strcpy(&path[strlen(ROOT)], page);
+
+        char filePath[1024] = "/Volumes/Parhai/Parhai/LUMS/Semester 2 Spring17/Advanced Operating Systems/Assignments/Assignment 2/Assignment2-Server/Assignment2-Server/";
+        strcat(filePath, file_name);
         
-        if ( (fd=open(file_name, O_RDONLY))!=-1 )    //FILE FOUND
+        if ( (fd=open(file_name, O_RDONLY))!=-1 )    //FILE FOUND - server running from terminal
         {
             write (connection_fd, ok_response, strlen (ok_response));
+            send_data_using_shared_memory(ftokFileName, threadNoAsKey, ok_response, strlen (ok_response));
+            strncpy(segptr->data, ok_response, strlen (ok_response));
+
             while ( (bytes_read=read(fd, data_to_send, BYTES-1))>0 ) {
-                write (connection_fd, data_to_send, bytes_read);
+//                write (connection_fd, data_to_send, bytes_read);
+                send_data_using_shared_memory(ftokFileName, threadNoAsKey, data_to_send, bytes_read);
+                strncpy(segptr->data, data_to_send, bytes_read);
             }
+            close(fd);
         }
+        else if ((fd=open(filePath, O_RDONLY))!=-1) { // if the server is running using xcode
+            write (connection_fd, ok_response, strlen (ok_response));
+            send_data_using_shared_memory(ftokFileName, threadNoAsKey, ok_response, strlen (ok_response));
+            strncpy(segptr->data, ok_response, strlen (ok_response));
+
+            while ( (bytes_read=read(fd, data_to_send, BYTES-1))>0 ) {
+//                write (connection_fd, data_to_send, bytes_read);
+                send_data_using_shared_memory(ftokFileName, threadNoAsKey, data_to_send, bytes_read);
+                strncpy(segptr->data, data_to_send, bytes_read);
+            }
+            close(fd);
+        }
+
         else {
             /* Either the requested page was malformed, or we couldn't open a
              module with the indicated name.  Either way, return the HTTP
              response 404, Not Found.  */
             char response[1024];
-            
             /* Generate the response message.  */
             snprintf (response, sizeof (response), not_found_response_template, page);
-            /* Send it to the client.  */
-//            write (connection_fd, response, strlen (response));
-//            printf("Total Response sent : %ld\n", strlen(response));
-            
-            key_t intKey;
-            int   shmid;
-            struct SharedMemory* segptr;
-            
-            /* Create unique key via call to ftok() */
-            intKey = ftok(ftokFileName, atoi(threadNoAsKey));
-            
-                /* Segment probably already exists - try as a client */
-                if((shmid = shmget(intKey, SEGMENT_SIZE, 0)) == -1) {
-                    perror("shmget");
-                    return;
-                }
-            /* Attach (map) the shared memory segment into the current process */
-            (segptr = (struct SharedMemory *)shmat(shmid, 0, 0));
-            if( segptr == (struct SharedMemory*)-1) {
-                perror("shmat");
-                return;
-            }
-            
+            /* Write it on the shared memory  */
             strcpy(segptr->data, response);
-            if (pthread_cond_signal(&segptr->cond) != 0) {
-                perror("pthread_cond_signal() error");
-            }
-            if (shmdt(segptr) == -1) {
-                perror("shmdt. Could not detach");
-            }
 
         }
+        
+        // Signal Proxy server that all data has been written
+        if (pthread_cond_signal(&segptr->cond) != 0) {
+            perror("pthread_cond_signal() error");
+        }
+        // After all the data has been written, we will detach this shared memory segment.
+        if (shmdt(segptr) == -1) {
+            perror("shmdt. Could not detach");
+        }
+
     }
     
 }

@@ -64,6 +64,7 @@
 		058F69EE1E990EF800E5209D /* transform.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = transform.c; sourceTree = "<group>"; };
 		058F69EF1E990EF800E5209D /* util.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = util.c; sourceTree = "<group>"; };
 		058F69F01E990EF800E5209D /* vector.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = vector.c; sourceTree = "<group>"; };
+		05E64A1B1E9BCFD500294DEA /* index.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = index.html; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -102,6 +103,7 @@
 				058F69DE1E990EF800E5209D /* lib */,
 				058F69281E9889B200E5209D /* Common */,
 				053F55B61E9530C300EBB05D /* s.c */,
+				05E64A1B1E9BCFD500294DEA /* index.html */,
 			);
 			path = "Assignment2-Server";
 			sourceTree = "<group>";

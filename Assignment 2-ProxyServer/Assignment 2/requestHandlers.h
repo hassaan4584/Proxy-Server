@@ -11,8 +11,6 @@
 
 #include <time.h>
 
-
-
 // MARK: - Server GET Requests with shared memory
 
 static void handle_get_with_shared_memory (int connection_fd, const char* proxyBaseUrl, const char* page, int threadNumber)
@@ -186,20 +184,20 @@ static void handle_get_with_shared_memory (int connection_fd, const char* proxyB
                 }
             }
             
-//            struct shmid_ds buff;
-//            if (shmctl(shmid, IPC_STAT, &buff) == -1) {
-//                perror("shmctl() error with IPC_STAT");
-//            }
-//            if (shmctl(shmid, IPC_RMID, &buff) == -1) // remove the shared memory segment
-//            {
-//                perror("shmctl() error");
-//            }
-//            if (shmdt(segptr) == -1) {
-//                perror("shmdt() error");
-//            }
-//            else {
-//                printf("Deleting shared memory segment\n");
-//            }
+            struct shmid_ds buff;
+            if (shmctl(shmid, IPC_STAT, &buff) == -1) {
+                perror("shmctl() error with IPC_STAT");
+            }
+            if (shmctl(shmid, IPC_RMID, &buff) == -1) // remove the shared memory segment
+            {
+                perror("shmctl() error");
+            }
+            if (shmdt(segptr) == -1) {
+                perror("shmdt() error");
+            }
+            else {
+                printf("Deleting shared memory segment\n");
+            }
         }
         
     }

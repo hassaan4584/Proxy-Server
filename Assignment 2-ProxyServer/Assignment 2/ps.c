@@ -33,12 +33,9 @@
 
 
 
-//void *handle_request(void *param);
-//void send_file(char *fileName, int new_sd);
 int createThreadPool(struct ThreadPoolManager *manager);
+void ex_program(int sig);
 
-//int getNextEmptyThreadNumber(struct ThreadPoolManager* poolManager, int nextThreadNumber, bool force);
-//void parse_command_line_arguments(int argc, char* argv[]);
 
 
 // MARK: - Main Function
@@ -46,10 +43,10 @@ int createThreadPool(struct ThreadPoolManager *manager);
 
 int main(int argc, char* argv[] )
 {
+    (void) signal(SIGINT, ex_program);
     waitingRequestsQueue = newQueue();
     parse_command_line_arguments(argc, argv);
 	int threadCount = 0;
-	struct ThreadPoolManager tm;
     ROOT = getenv("PWD");
 	int s_id;
 	struct sockaddr_in my_addr, remote_addr;
@@ -66,6 +63,7 @@ int main(int argc, char* argv[] )
 	unsigned int size = sizeof (struct sockaddr_in);
 
 	int new_sd=0;
+    struct ThreadPoolManager tm;
 	createThreadPool(&tm);
 
 	while(1)
@@ -130,6 +128,51 @@ int createThreadPool(struct ThreadPoolManager *manager)
 
 	return 0;
 
+}
+
+// MARK: - Ctrl C
+void ex_program(int sig) {
+    printf("Catched signal: %d ... !!\n", sig);
+    
+    for (int i=0 ; i< MAX_THREAD_COUNT ; i++) {
+        
+        key_t intKey;
+        int   shmid;
+        struct SharedMemory* segptr;
+        /* Create unique key via call to ftok() */
+        char ftokFileName[128];
+        snprintf(ftokFileName, 127, "%d", i);
+        intKey = ftok(ftokFileName, i);
+        /* Segment probably already exists - try as a client */
+        if((shmid = shmget(intKey, SEGMENT_SIZE, 0)) == -1) {
+            perror("shmget");
+            return;
+        }
+        /* Attach (map) the shared memory segment into the current process */
+        (segptr = (struct SharedMemory *)shmat(shmid, 0, 0));
+        if( segptr == (struct SharedMemory*)-1) {
+            perror("shmat");
+            return;
+        }
+
+        struct shmid_ds buff;
+        if (shmctl(shmid, IPC_STAT, &buff) == -1) {
+            perror("shmctl() error with IPC_STAT");
+        }
+        if (shmctl(shmid, IPC_RMID, &buff) == -1) // remove the shared memory segment
+        {
+            perror("shmctl() error");
+        }
+        if (shmdt(segptr) == -1) {
+            perror("shmdt() error");
+        }
+        else {
+            printf("Deleting shared memory segment\n");
+        }
+        
+    } //  end for
+    
+    (void) signal(SIGINT, SIG_DFL);
 }
 
 

@@ -12,9 +12,27 @@
 #include <time.h>
 
 
+int createFtokFileIfNotExists(char* fileName)
+{
+//    snprintf(fileName, 127, "%d", i);
+    char completeFileName[1024] = "/Users/Hassaan/Desktop/ftokFiles/file";
+    strcat(completeFileName, fileName);
+    strcat(completeFileName, ".dat");
+    
+    strcpy(fileName, completeFileName);
+    FILE *fd = fopen(completeFileName, "a");
+    if (fd == NULL) {
+        perror("Could not open file.");
+    }
+    else {
+        fclose(fd);
+    }
+    return 0;
+}
+
 //****************** HANDLE GET REQUEST Via SHARED MEMORY function ******************//
 
-static void handle_get_with_shared_memory (int connection_fd, const char* proxyBaseUrl, const char* page)
+static void handle_get_with_shared_memory (int connection_fd, const char* proxyBaseUrl, const char* page, int threadNumber)
 {
     char data_to_send[BYTES];
     int fd;
@@ -61,10 +79,11 @@ static void handle_get_with_shared_memory (int connection_fd, const char* proxyB
             int   shmid;
             struct SharedMemory* segptr;
             
-//            char charId[30];
-//            sprintf(charId, "%d", connection_fd+1000);
+            char ftokFileName[128];
+            snprintf(ftokFileName, 127, "%d", threadNumber);
+            createFtokFileIfNotExists(ftokFileName);
             /* Create unique key via call to ftok() */
-            key = ftok("/Users/Hassaan/Desktop/ftok.txt", connection_fd);
+            key = ftok(ftokFileName, threadNumber);
 //            key = ftok(FTOK_KEY, 'S');
             
             if((shmid = shmget(key, SEGMENT_SIZE, IPC_CREAT|IPC_EXCL|0666)) == -1) {
@@ -148,10 +167,14 @@ static void handle_get_with_shared_memory (int connection_fd, const char* proxyB
             char buffer[BUFFER_SIZE];
             char completeRequest[1024] = "LOCAL-GET /index.html HTTP/1.0";
             
-            strcat(completeRequest, "\r\n&key=");
-            char stringId[20];
-            snprintf(stringId, 20, "%d", key);
+            strcat(completeRequest, "\r\n&fileName=");
+            char stringId[1024];
+            snprintf(stringId, 1023, "%s", ftokFileName);
+            strcat(completeRequest, stringId);
 
+            strcat(completeRequest, "\r\n&threadNumber=");
+            snprintf(stringId, 10, "%d", threadNumber);
+            
             strcat(completeRequest, stringId);
             strcat(completeRequest, "\r\n\r\n");
             
@@ -178,7 +201,7 @@ static void handle_get_with_shared_memory (int connection_fd, const char* proxyB
             gettimeofday(&tv, NULL);
             ts.tv_sec = tv.tv_sec + 2;
             ts.tv_nsec = 0;
-            if (pthread_cond_timedwait(&segptr->cond, &segptr->mutex, &ts) != 0) {
+            if (pthread_cond_wait(&segptr->cond, &segptr->mutex) != 0) {
                 perror("pthread_cond_timedwait() error");
             }
             send(connection_fd, segptr->data, strlen(segptr->data), 0); // read once the data is written
@@ -252,24 +275,38 @@ static void handle_get_with_sockets (int connection_fd, const char* proxyBaseUrl
             
             ///// ***********
             
-            const char *hostname = proxyBaseUrl;
+/*            const char *hostname = proxyBaseUrl;
             struct hostent *hp;
             struct sockaddr_in addr;
+            struct in_addr *pptr;
             int on = 1;
             int sd; // Socket descriptor that would be used to communicate with the server
             
             if((hp = gethostbyname(hostname)) == NULL){
                 herror("gethostbyname");
-                exit(1);
+                shutdown(sd, SHUT_RDWR);
+                close(sd);
+                return;
             }
+            
+            bzero((char *) &addr, sizeof(addr));
+            addr.sin_family = AF_INET;
+            pptr = (struct in_addr  *)hp->h_addr;
+            bcopy((char *)pptr, (char *)&addr.sin_addr, hp->h_length);
+
             printf("%s\n",hp->h_name );
-            bcopy(hp->h_addr, &addr.sin_addr, hp->h_length);
-            addr.sin_port = htons(SERVER_PORT_NO);
+//            bcopy(hp->h_addr, &addr.sin_addr, hp->h_length);
+            if (strcmp(proxyBaseUrl, "127.0.0.1") && strcmp(proxyBaseUrl, "localhost"))
+                addr.sin_port = htons(SERVER_PORT_NO);
+            else
+                addr.sin_port = htons(80); // Port where webservers are listening to the requests
+    
+            
+
             addr.sin_family = AF_INET;
             
-            sd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-            setsockopt(sd, IPPROTO_TCP, TCP_NODELAY, (const char *)&on, sizeof(int));
-            
+            sd = socket(AF_INET, SOCK_STREAM, 0);
+//            setsockopt(sd, IPPROTO_TCP, TCP_NODELAY, (const char *)&on, sizeof(int));
             if(sd == -1){
                 perror("setsockopt");
                 return;
@@ -282,7 +319,10 @@ static void handle_get_with_sockets (int connection_fd, const char* proxyBaseUrl
             }
             
             char buffer[BUFFER_SIZE];
-            char completeRequest[1024] = "GET /index.html HTTP/1.0\r\n\r\n";
+            char completeRequest[1024] = "GET http://www.google.com.pk/";
+            strcat(completeRequest, file_name);
+            strcat(completeRequest, " HTTP/1.0");
+            strcat(completeRequest, "\r\n\r\n");
             
             write(sd, completeRequest, strlen(completeRequest));
             bzero(buffer, BUFFER_SIZE);
@@ -301,7 +341,98 @@ static void handle_get_with_sockets (int connection_fd, const char* proxyBaseUrl
             
             shutdown(sd, SHUT_RDWR);
             close(sd);
+
+            */
             
+            size_t n;
+            int sockfd, portno, flag;
+            struct sockaddr_in serv_addr;
+            struct in_addr *pptr;
+            struct hostent *server;
+            
+            char buffer[256];
+            /* Extract host and port from HTTP Request */
+            const char *hoststring = proxyBaseUrl;
+//            char req[1024] = "GET http://www.google.com.pk/?gws_rd=cr&amp;ei=iqDkWPukEIGMsgHboaaIBw HTTP/1.0\r\n\r\n";
+            char completeRequest[1024] = "GET ";
+            if (strcmp(proxyBaseUrl, "127.0.0.1") && strcmp(proxyBaseUrl, "localhost")) {
+                // The proxy server and actual server are on the different machine.
+                strcat(completeRequest, proxyBaseUrl);
+            }
+            else {
+            }
+            strcat(completeRequest, "/");
+            strcat(completeRequest, file_name);
+            strcat(completeRequest, " HTTP/1.0");
+            strcat(completeRequest, "\r\n\r\n");
+
+            if (strcmp(proxyBaseUrl, "127.0.0.1") && strcmp(proxyBaseUrl, "localhost"))
+                portno = 80; // Port where webservers are listening to the requests
+            else
+                portno = SERVER_PORT_NO;
+            /* Create a socket point */
+            sockfd = socket(AF_INET, SOCK_STREAM, 0);
+            if(sockfd < 0)
+            {
+                perror("Error opening socket\n");
+                shutdown(sockfd, SHUT_RDWR);
+                close(sockfd);
+                return;
+            }
+            server = gethostbyname(hoststring);
+            if (server == NULL)
+            {
+                fprintf(stderr, "No such host\n");
+                shutdown(sockfd, SHUT_RDWR);
+                close(sockfd);
+                return;
+            }
+            
+            
+            
+            
+            bzero((char *) &serv_addr, sizeof(serv_addr));
+            serv_addr.sin_family = AF_INET;
+            pptr = (struct in_addr  *)server->h_addr;
+            bcopy((char *)pptr, (char *)&serv_addr.sin_addr, server->h_length);
+            serv_addr.sin_port = htons(portno);
+            
+            /* Connect to server */
+            if(connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr))<0)
+            {
+                perror("Error in connecting to server\n");
+                shutdown(sockfd, SHUT_RDWR);
+                close(sockfd);
+                return;
+            }
+            
+            /* Message to be sent to the server */
+            /* printf("message to server : "); */
+            bzero(buffer, 256);
+            /* fgets(buffer, 255, stdin); */
+            
+            /* Send message to server */
+            n = write(sockfd, completeRequest, strlen(completeRequest));
+            if(n == 0) {
+                perror("Error writing to socket\n");
+                exit(1);
+            }
+            
+            /* Read server response */
+            bzero(buffer, 256);
+            flag = 1;
+            size_t i;
+            //            printf("\nreading server response\n");
+            while( (n = read(sockfd, buffer, 255) > 0))
+            {
+                if(flag)
+                {
+                    printf("%s", buffer);
+                    flag = 0;
+                }
+                i = write(connection_fd, buffer, strlen(buffer));
+            }
+            close(sockfd);
             
             //**********
         }
@@ -397,20 +528,48 @@ void *handle_request(void *param)
                 char baseURL[256] = "127.0.0.1";
                 char filepath[256] = "/index.html";
                 if (SHOULD_USE_SHARED_MEMORY) {
-                    if (strcmp (protocol, "HTTP/1.0") && strcmp (protocol, "HTTP/1.1")) {
-                        handle_get_with_shared_memory(new_sd, baseURL, url);
+                    /* Extracting required information from the get request */
+                    sscanf (proxyAddress, "%254[^'/']%s", baseURL, filepath);
+                    if (strcmp(baseURL, "HTTP") == 0) {
+                        //if the request came from firefox
+                        strcpy(baseURL, "127.0.0.1");
+                        strcpy(filepath, "/index.html");
+                    }
+                    
+                    if (strcmp(baseURL, "127.0.0.1") && strcmp(baseURL, "localhost")) {
+                        /* If the actual server is not the present at 127.0.0.1, then even if we have the
+                         shared memory optimization enabled, we will still make the request to the actual
+                         server using sockets. Since this proxy server and the actual servers are present
+                         on different machines */
+                        
+                        /* Differntiating if the request came from an actual web browser or
+                         from my own web client */
+                        if (strcmp (protocol, "HTTP/1.0") && strcmp (protocol, "HTTP/1.1")) {
+                            handle_get_with_sockets(new_sd, baseURL, url);
+                        }
+                        else {
+                            sscanf (proxyAddress, "%254[^'/']%s", baseURL, filepath);
+                            handle_get_with_sockets(new_sd, baseURL, filepath);
+                        }
                     }
                     else {
-                        sscanf (proxyAddress, "%254[^'/']%s", baseURL, filepath);
-                        handle_get_with_shared_memory(new_sd, baseURL, filepath);
+                        /* If the actual server and this proxy server are running on one machine. */
+                        if (strcmp (protocol, "HTTP/1.0") && strcmp (protocol, "HTTP/1.1")) {
+                            handle_get_with_shared_memory(new_sd, baseURL, url, threadDetails->threadNumber);
+                        }
+                        else {
+                            handle_get_with_shared_memory(new_sd, baseURL, filepath, threadDetails->threadNumber);
+                        }
                     }
                 }
                 else {
+                    /* If the shared memory optimization is disabled, we will use sockets 
+                     for forwarding requests. */
                     if (strcmp (protocol, "HTTP/1.0") && strcmp (protocol, "HTTP/1.1")) {
                         handle_get_with_sockets(new_sd, baseURL, url);
                     }
                     else {
-                        sscanf (proxyAddress, "%254[^'/']%s", baseURL, filepath);
+                        sscanf (proxyAddress, "%254[^'/']%s/", baseURL, filepath);
                         handle_get_with_sockets(new_sd, baseURL, filepath);
                     }
                 }

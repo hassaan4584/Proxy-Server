@@ -176,6 +176,7 @@ void *make_request(void *param)
 //    char completeRequest[1024] = "GET /index.html HTTP/1.0\r\n\r\n";
     char completeRequest[1024] = "GET ";
     strcat(completeRequest, PROXY_IP_ADDRESS);
+//    strcat(completeRequest, " www.google.com.pk/index.html");
     strcat(completeRequest, " 127.0.0.1/index.html");
     strcat(completeRequest, " HTTP/1.0");
     

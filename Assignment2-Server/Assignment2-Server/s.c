@@ -117,7 +117,7 @@ int main()
 // MARK: - Handle Local Get
 //****************** HANDLE LOCAL GET REQUEST function ******************//
 
-static void handle_local_get (int connection_fd, const char* page, const char* key)
+static void handle_local_get (int connection_fd, const char* page, const char* ftokFileName, const char* threadNoAsKey)
 {
     char data_to_send[BYTES];
     int fd;
@@ -158,16 +158,16 @@ static void handle_local_get (int connection_fd, const char* page, const char* k
             snprintf (response, sizeof (response), not_found_response_template, page);
             /* Send it to the client.  */
 //            write (connection_fd, response, strlen (response));
-            printf("Total Response sent : %ld\n", strlen(response));
+//            printf("Total Response sent : %ld\n", strlen(response));
             
-//            key_t key;
+            key_t intKey;
             int   shmid;
             struct SharedMemory* segptr;
             
-            char charId[30];
-            sprintf(charId, "%d", connection_fd+1000);
+//            char charId[30];
+//            sprintf(charId, "%d", connection_fd+1000);
             /* Create unique key via call to ftok() */
-//            key = ftok("/Users/Hassaan/Desktop/ftok.txt", connection_fd);
+            intKey = ftok(ftokFileName, atoi(threadNoAsKey));
 //            key = ftok(strcat(charId, FTOK_KEY), 'S');
 //            key = ftok(FTOK_KEY, 'S');
             
@@ -175,22 +175,20 @@ static void handle_local_get (int connection_fd, const char* page, const char* k
 //                printf("Shared memory segment exists - opening as client\n");
             
                 /* Segment probably already exists - try as a client */
-                if((shmid = shmget(atoi(key), SEGMENT_SIZE, 0)) == -1) {
+                if((shmid = shmget(intKey, SEGMENT_SIZE, 0)) == -1) {
                     perror("shmget");
-                    if (pthread_cond_signal(&segptr->cond) != 0) {
-                        perror("pthread_cond_signal() error");
-                    }
                     return;
                 }
 //            }
 //            else {
 //                printf("Creating new shared memory segment\n");
 //            }
+//            shmid = atoi(threadNoAsKey);
             /* Attach (map) the shared memory segment into the current process */
             (segptr = (struct SharedMemory *)shmat(shmid, 0, 0));
             if( segptr == (struct SharedMemory*)-1) {
                 perror("shmat");
-                exit(1);
+                return;
             }
             
             strcpy(segptr->data, response);
@@ -303,7 +301,7 @@ static void handle_local_get (int connection_fd, const char* page, const char* k
 
 static void handle_get (int connection_fd, const char* page)
 {
-    printf("\nServer. Transmitting data via sockets.");
+    printf("Server. Transmitting data via sockets.\n");
     char data_to_send[BYTES];
     int fd;
     long bytes_read;
@@ -514,13 +512,15 @@ void *handle_request(void *param)
             }
             else {
                 /* A valid request.  Process it.  */
-                char temp[256] = "127.0.0.1";
-                char key[256] ;
+                char temp[256] ;
+                char ftokFileName[1024] ;
+                char threadNoAsKey[20];
                 if (strcmp(method, "LOCAL-GET") == 0) {
                     // if its a request from a local proxy server, we ll use shared memory to pass data between the two processses.
                      // extracting key from the recceived request
-                    sscanf (buffer, "%254[^'=']=%s", temp, key);
-                    handle_local_get(new_sd, url, key);
+                    sscanf(buffer, "%254[^'=']=%s %254[^'=']=%s", temp, ftokFileName, temp, threadNoAsKey);
+                    handle_local_get(new_sd, url, ftokFileName, threadNoAsKey);
+
                 }
                 else {
                     handle_get (new_sd, url);

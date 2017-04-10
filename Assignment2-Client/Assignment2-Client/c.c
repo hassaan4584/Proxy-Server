@@ -26,15 +26,13 @@ struct Details
 };
 
 
-
 void parse_command_line_arguments(int argc, char* argv[], int*, int* );
 void create_required_threads();
 void *make_request(void *param);
-int socket_connect(char *host, in_port_t port);
 
 
 
-//****************** MAIN FUNCTION ******************//
+// MARK: - Main Function
 
 int main(int argc, char* argv[] )
 {
@@ -42,78 +40,12 @@ int main(int argc, char* argv[] )
 
 	 int totalThreads = 0;
 	 int requestsPerThread = 0;
-//
+
     parse_command_line_arguments(argc, argv, &totalThreads, &requestsPerThread);
     printf("The number of threads : %d\n", totalThreads);
     printf("The number of requests per thread : %d\n", requestsPerThread);
-//
-//	 // create_required_threads();
-//
-//	 struct hostent *hp;
-//	 int on = 0;
-//	 if((hp = gethostbyname("www.google.com")) == NULL){
-//	 	herror("gethostbyname");
-//	 	exit(1);
-//	 }
-//	 bcopy(hp->h_addr, &serv_addr.sin_addr, hp->h_length);
-//
-//	 serv_addr.sin_family=AF_INET;
-//	 serv_addr.sin_port = htons (5555);
-//	 // serv_addr.sin_addr.s_addr = inet_addr ("127.0.0.1");
-//	 // serv_addr.sin_addr.s_addr = inet_addr ("www.google.com");
-//	 s_id = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-//	 setsockopt(s_id, IPPROTO_TCP, TCP_NODELAY, (const char *)&on, sizeof(int));
-//
-//	 // for(int i=0 ; i < 10 ; i++) 
-//	 {
-//	 	// requesting to connect using the accept function
-//	 	int connect_id=connect(s_id,(struct sockaddr*)&serv_addr,sizeof(struct sockaddr));
-//	 	if(connect_id == -1)
-//	 	{
-//	 		error("Client. Could not Connect. \n");
-//	 		return 0;
-//	 	}
-//	 	// s_id = socket (PF_INET,SOCK_STREAM,0);
-//	 	// if(s_id == -1)
-//	 	// {	
-//	 	// 	perror("Client. Could not Assign Socket.\n");
-//	 	// 	return 0;
-//	 	// }		
-//
-//	 	// sleep(1);
-//	 }
 
-
-
-
-	 	// while(1)
-//	 	{
-	 		// s_data[0] = '\0';
-	 		// printf("Enter file address : ");
-	 		// scanf("%s", fileAddress);
-	 		// send_id = mySend(s_id, fileAddress ,1000, 0); //send user name
-
-	 		// printf("Enter password : ");
-	 		// scanf("%s", pwd);
-	 		// send_id = mySend(s_id, pwd ,1000, 0); //send password
-
-	 		// recv_id = myReceive (s_id,confirmation,1000, 0);
-	 		// if(strcmp(confirmation,QUIT_CONNECTION) == 0) { // same strings
-	 		// 	printf("\nServer terminated connection\n");
-	 			// break;
-	 		// }
-//	 	}
-
-
-
-
-	// if(argc < 3){
-	// 	fprintf(stderr, "Usage: %s <hostname> <port>\n", argv[0]);
-	// 	exit(1); 
-	// }
-       
-	// fd = socket_connect(argv[1], atoi(argv[2])); 
-	char hostname[1024] = PROXY_IP_ADDRESS;
+    char hostname[1024] = PROXY_IP_ADDRESS;
     struct hostent *hp;
     struct sockaddr_in addr;
     int on = 1;
@@ -135,12 +67,10 @@ int main(int argc, char* argv[] )
         
         if(sd == -1){
             perror("setsockopt");
-//            exit(1);
             continue;
         }
         if(connect(sd, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) == -1){
             perror("error on connect... \nSkipping");
-//            exit(1);
             continue;
         }
 
@@ -162,8 +92,7 @@ int main(int argc, char* argv[] )
 }
 
 
-// MARK: - Create Request
-//****************** CREATE REQUEST ******************//
+// MARK: - Create Requests
 
 void *make_request(void *param)
 {
@@ -213,15 +142,11 @@ void *make_request(void *param)
 void create_required_threads() 
 {
 	int s_id;
-//	char msg[100] =""; 
-//	int msg_length = 100;
 	struct sockaddr_in serv_addr;
 	s_id = socket (PF_INET,SOCK_STREAM,0);
-	if(s_id == -1)
-	{	
+	if(s_id == -1) {
 		perror("Client. Could not Assign Socket");
-		// return 0;
-	}		
+	}
 
 	serv_addr.sin_family=AF_INET;
 	serv_addr.sin_port = htons (PROXY_SERVER_PORT_NO);
@@ -229,20 +154,9 @@ void create_required_threads()
 
 	// requesting to connect using the accept function
 	int connect_id=connect(s_id,(struct sockaddr*)&serv_addr,sizeof(struct sockaddr));
-	if(connect_id == -1)
-	{
+	if(connect_id == -1) {
 		error("Client. Could not Connect ");
-		// return 0;
-	}		
-
-    
-    
-	// Yahan pay ziada saray threads bnanay hain
-	// us k baad har individual thread kaam karay ga.
-
-	// struct Details *myDetails = malloc (sizeof(struct Details));
-	// myDetails->send_id = s_id;
-	// int rv1 = pthread_create(&threads[threadCount++], NULL, handle_request, (void*) myDetails);
+	}
 
 }
 
@@ -250,7 +164,6 @@ void create_required_threads()
 void parse_command_line_arguments(int argc, char* argv[], int *totalThreads, int *requestsPerThread ) 
 {
 
-//    char c;    
     //Parsing the command line arguments
    if( argc == 3 ) {
      	*totalThreads = atoi(argv[1]);

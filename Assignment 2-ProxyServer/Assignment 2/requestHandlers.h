@@ -12,25 +12,8 @@
 #include <time.h>
 
 
-int createFtokFileIfNotExists(char* fileName)
-{
-//    snprintf(fileName, 127, "%d", i);
-    char completeFileName[1024] = "/Users/Hassaan/Desktop/ftokFiles/file";
-    strcat(completeFileName, fileName);
-    strcat(completeFileName, ".dat");
-    
-    strcpy(fileName, completeFileName);
-    FILE *fd = fopen(completeFileName, "a");
-    if (fd == NULL) {
-        perror("Could not open file.");
-    }
-    else {
-        fclose(fd);
-    }
-    return 0;
-}
 
-//****************** HANDLE GET REQUEST Via SHARED MEMORY function ******************//
+// MARK: - Server GET Requests with shared memory
 
 static void handle_get_with_shared_memory (int connection_fd, const char* proxyBaseUrl, const char* page, int threadNumber)
 {
@@ -84,7 +67,6 @@ static void handle_get_with_shared_memory (int connection_fd, const char* proxyB
             createFtokFileIfNotExists(ftokFileName);
             /* Create unique key via call to ftok() */
             key = ftok(ftokFileName, threadNumber);
-//            key = ftok(FTOK_KEY, 'S');
             
             if((shmid = shmget(key, SEGMENT_SIZE, IPC_CREAT|IPC_EXCL|0666)) == -1) {
                 printf("Shared memory segment exists - opening as client\n");
@@ -126,14 +108,6 @@ static void handle_get_with_shared_memory (int connection_fd, const char* proxyB
             if (pthread_mutex_lock(&segptr->mutex) != 0) {
                 perror("pthread_mutex_lock() error");
             }
-            
-
-//            strcpy(segptr->data, "Hello shared memory !");
-            
-            
-            //***********
-            
-            ///// ***********
             
             const char *hostname = proxyBaseUrl;
             struct hostent *hp;
@@ -181,26 +155,15 @@ static void handle_get_with_shared_memory (int connection_fd, const char* proxyB
             write(sd, completeRequest, strlen(completeRequest));
             bzero(buffer, BUFFER_SIZE);
             
-//            long totalBytesRead = 0;
-//            long bytesRead = read(sd, buffer, BUFFER_SIZE - 1);
-//            while(bytesRead != 0 && bytesRead != -1){
-//                write (connection_fd, buffer, BUFFER_SIZE - 1); // send data back to client
-//                totalBytesRead += bytesRead;
-//                //                    fprintf(stderr, "%s", buffer);
-//                bzero(buffer, BUFFER_SIZE);
-//                bytesRead = read(sd, buffer, BUFFER_SIZE - 1);
-//            }
-//            
-//            printf("Total bytes received : %ld\n", totalBytesRead);
-            
+            // terminating connection with server because response would be in the shared memory.
             shutdown(sd, SHUT_RDWR);
             close(sd);
             
-            struct timeval tv;
-            struct timespec ts;
-            gettimeofday(&tv, NULL);
-            ts.tv_sec = tv.tv_sec + 2;
-            ts.tv_nsec = 0;
+//            struct timeval tv;
+//            struct timespec ts;
+//            gettimeofday(&tv, NULL);
+//            ts.tv_sec = tv.tv_sec + 2;
+//            ts.tv_nsec = 0;
             if (pthread_cond_wait(&segptr->cond, &segptr->mutex) != 0) {
                 perror("pthread_cond_timedwait() error");
             }
@@ -221,15 +184,13 @@ static void handle_get_with_shared_memory (int connection_fd, const char* proxyB
             else {
                 printf("Deleting shared memory segment\n");
             }
-
-            
-            //**********
         }
         
     }
     
 }
-//****************** HANDLE GET REQUEST function ******************//
+
+// MARK: - Server GET Requests with sockets
 
 static void handle_get_with_sockets (int connection_fd, const char* proxyBaseUrl, const char* page)
 {
@@ -252,8 +213,6 @@ static void handle_get_with_sockets (int connection_fd, const char* proxyBaseUrl
             // removing the "/" on the first index
             memmove (file_name, file_name+1, strlen (file_name+1) + 1);
         }
-        //        strcpy(path, ROOT);
-        //        strcpy(&path[strlen(ROOT)], page);
         
         if ( (fd=open(file_name, O_RDONLY))!=-1 )    //FILE FOUND
         {
@@ -271,78 +230,6 @@ static void handle_get_with_sockets (int connection_fd, const char* proxyBaseUrl
             snprintf (response, sizeof (response), not_found_response_template, page);
             /* Send it to the client.  */
             //            write (connection_fd, response, strlen (response));
-            
-            
-            ///// ***********
-            
-/*            const char *hostname = proxyBaseUrl;
-            struct hostent *hp;
-            struct sockaddr_in addr;
-            struct in_addr *pptr;
-            int on = 1;
-            int sd; // Socket descriptor that would be used to communicate with the server
-            
-            if((hp = gethostbyname(hostname)) == NULL){
-                herror("gethostbyname");
-                shutdown(sd, SHUT_RDWR);
-                close(sd);
-                return;
-            }
-            
-            bzero((char *) &addr, sizeof(addr));
-            addr.sin_family = AF_INET;
-            pptr = (struct in_addr  *)hp->h_addr;
-            bcopy((char *)pptr, (char *)&addr.sin_addr, hp->h_length);
-
-            printf("%s\n",hp->h_name );
-//            bcopy(hp->h_addr, &addr.sin_addr, hp->h_length);
-            if (strcmp(proxyBaseUrl, "127.0.0.1") && strcmp(proxyBaseUrl, "localhost"))
-                addr.sin_port = htons(SERVER_PORT_NO);
-            else
-                addr.sin_port = htons(80); // Port where webservers are listening to the requests
-    
-            
-
-            addr.sin_family = AF_INET;
-            
-            sd = socket(AF_INET, SOCK_STREAM, 0);
-//            setsockopt(sd, IPPROTO_TCP, TCP_NODELAY, (const char *)&on, sizeof(int));
-            if(sd == -1){
-                perror("setsockopt");
-                return;
-            }
-            if(connect(sd, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) == -1){
-                perror("error on connect... \nSkipping");
-                shutdown(sd, SHUT_RDWR);
-                close(sd);
-                return;
-            }
-            
-            char buffer[BUFFER_SIZE];
-            char completeRequest[1024] = "GET http://www.google.com.pk/";
-            strcat(completeRequest, file_name);
-            strcat(completeRequest, " HTTP/1.0");
-            strcat(completeRequest, "\r\n\r\n");
-            
-            write(sd, completeRequest, strlen(completeRequest));
-            bzero(buffer, BUFFER_SIZE);
-            
-            long totalBytesRead = 0;
-            long bytesRead = read(sd, buffer, BUFFER_SIZE - 1);
-            while(bytesRead != 0 && bytesRead != -1){
-                write (connection_fd, buffer, BUFFER_SIZE - 1); // send data back to client
-                totalBytesRead += bytesRead;
-                //                    fprintf(stderr, "%s", buffer);
-                bzero(buffer, BUFFER_SIZE);
-                bytesRead = read(sd, buffer, BUFFER_SIZE - 1);
-            }
-            
-            printf("Total bytes received : %ld\n", totalBytesRead);
-            
-            shutdown(sd, SHUT_RDWR);
-            close(sd);
-
-            */
             
             size_t n;
             int sockfd, portno, flag;
@@ -388,9 +275,6 @@ static void handle_get_with_sockets (int connection_fd, const char* proxyBaseUrl
                 return;
             }
             
-            
-            
-            
             bzero((char *) &serv_addr, sizeof(serv_addr));
             serv_addr.sin_family = AF_INET;
             pptr = (struct in_addr  *)server->h_addr;
@@ -433,15 +317,12 @@ static void handle_get_with_sockets (int connection_fd, const char* proxyBaseUrl
                 i = write(connection_fd, buffer, strlen(buffer));
             }
             close(sockfd);
-            
-            //**********
         }
-        
     }
-    
 }
 
-//****************** WORKER THREAD handle_request function ******************//
+
+// MARK: - Handle Incoming Requests
 
 void *handle_request(void *param)
 {
@@ -604,8 +485,6 @@ void *handle_request(void *param)
                 perror("pthread_mutex_lock() error");
             }
         }
-
-        
     }
     
     printf("Terminating worker thread no : %d\n\n", threadDetails->threadNumber);

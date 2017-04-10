@@ -164,26 +164,14 @@ static void handle_local_get (int connection_fd, const char* page, const char* f
             int   shmid;
             struct SharedMemory* segptr;
             
-//            char charId[30];
-//            sprintf(charId, "%d", connection_fd+1000);
             /* Create unique key via call to ftok() */
             intKey = ftok(ftokFileName, atoi(threadNoAsKey));
-//            key = ftok(strcat(charId, FTOK_KEY), 'S');
-//            key = ftok(FTOK_KEY, 'S');
-            
-//            if((shmid = shmget(key, SEGMENT_SIZE, IPC_CREAT|IPC_EXCL|0666)) == -1) {
-//                printf("Shared memory segment exists - opening as client\n");
             
                 /* Segment probably already exists - try as a client */
                 if((shmid = shmget(intKey, SEGMENT_SIZE, 0)) == -1) {
                     perror("shmget");
                     return;
                 }
-//            }
-//            else {
-//                printf("Creating new shared memory segment\n");
-//            }
-//            shmid = atoi(threadNoAsKey);
             /* Attach (map) the shared memory segment into the current process */
             (segptr = (struct SharedMemory *)shmat(shmid, 0, 0));
             if( segptr == (struct SharedMemory*)-1) {
@@ -192,112 +180,20 @@ static void handle_local_get (int connection_fd, const char* page, const char* f
             }
             
             strcpy(segptr->data, response);
-//            sleep(1);
             if (pthread_cond_signal(&segptr->cond) != 0) {
                 perror("pthread_cond_signal() error");
             }
-//            shmctl(shmid, IPC_RMID, 0); // remove the shared memory segment
-            shmdt(segptr);
+            if (shmdt(segptr) == -1) {
+                perror("shmdt. Could not detach");
+            }
 
-
-            /// ****************
-            
-            //            size_t n;
-            //            int sockfd, portno, flag;
-            //            struct sockaddr_in serv_addr;
-            //            struct in_addr *pptr;
-            //            struct hostent *server;
-            //
-            //            char buffer[256];
-            //            /* Extract host and port from HTTP Request */
-            //            char hoststring[100] = "www.google.com";
-            //            char req[1024] = "GET http://www.google.com.pk/?gws_rd=cr&amp;ei=iqDkWPukEIGMsgHboaaIBw HTTP/1.0\r\n\r\n";
-            //            /* Parsing the request string */
-            ////            for(i=0; i<strlen(req); i++)
-            ////            {
-            ////                if(req[i] == 'H' && req[i+1] == 'o' && req[i+2] == 's' && req[i+3] == 't')
-            ////                {
-            ////                    for(j=i+6; req[j] != '\r'; j++)
-            ////                    {
-            ////                        hoststring[j-i-6] = req[j];
-            ////                    }
-            ////                    hoststring[j] = '\0';
-            ////                    break;
-            ////                }
-            ////            }
-            ////            printf("\nHost extracted : '%s'\n", hoststring);
-            //            /* default port */
-            //            portno = 80;
-            //
-            //            /* Create a socket point */
-            //            sockfd = socket(AF_INET, SOCK_STREAM, 0);
-            //            if(sockfd < 0)
-            //            {
-            //                perror("Error opening socket\n");
-            //                exit(1);
-            //            }
-            //            server = gethostbyname(hoststring);
-            //            if (server == NULL)
-            //            {
-            //                fprintf(stderr, "No such host\n");
-            //                exit(0);
-            //            }
-            ////            printf("\nConnected to host\n");
-            //
-            //            bzero((char *) &serv_addr, sizeof(serv_addr));
-            //            serv_addr.sin_family = AF_INET;
-            //            pptr = (struct in_addr  *)server->h_addr;
-            //            bcopy((char *)pptr, (char *)&serv_addr.sin_addr, server->h_length);
-            //            serv_addr.sin_port = htons(portno);
-            //
-            //            /* Connect to server */
-            //            if(connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr))<0)
-            //            {
-            //                perror("Error in connecting to server\n");
-            //                exit(1);
-            //            }
-            //
-            //            /* Message to be sent to the server */
-            //            /* printf("message to server : "); */
-            //            bzero(buffer, 256);
-            //            /* fgets(buffer, 255, stdin); */
-            //
-            //            /* Send message to server */
-            //            n = write(sockfd, req, strlen(req));
-            //            if(n == 0) {
-            //                perror("Error writing to socket\n");
-            //                exit(1);
-            //            }
-            //            
-            //            /* Read server response */
-            //            bzero(buffer, 256);
-            //            flag = 1;
-            //            size_t i;
-            ////            printf("\nreading server response\n");
-            //            while( (n = read(sockfd, buffer, 255) > 0))
-            //            {
-            //                if(flag)
-            //                {
-            //                    printf("%s", buffer);
-            //                    flag = 0;
-            //                }
-            //                i = write(connection_fd, buffer, strlen(buffer));
-            //            }
-            //            close(sockfd);
-            
-            
-            //// ******************
         }
-        
-        /* Try to open the module.  */
-        //        module = module_open (module_file_name);
     }
     
 }
 
 
-// MARK: Handle Get Request
-//****************** HANDLE GET REQUEST function ******************//
+// MARK: - Handle Get Request
 
 static void handle_get (int connection_fd, const char* page)
 {
@@ -321,8 +217,6 @@ static void handle_get (int connection_fd, const char* page)
             // removing the "/" on the first index
             memmove (file_name, file_name+1, strlen (file_name+1) + 1);
         }
-//        strcpy(path, ROOT);
-//        strcpy(&path[strlen(ROOT)], page);
         
         if ( (fd=open(file_name, O_RDONLY))!=-1 )    //FILE FOUND
         {
@@ -343,97 +237,8 @@ static void handle_get (int connection_fd, const char* page)
             write (connection_fd, response, strlen (response));
             printf("Total Response sent : %ld\n", strlen(response));
             
-            /// ****************
-            
-//            size_t n;
-//            int sockfd, portno, flag;
-//            struct sockaddr_in serv_addr;
-//            struct in_addr *pptr;
-//            struct hostent *server;
-//            
-//            char buffer[256];
-//            /* Extract host and port from HTTP Request */
-//            char hoststring[100] = "www.google.com";
-//            char req[1024] = "GET http://www.google.com.pk/?gws_rd=cr&amp;ei=iqDkWPukEIGMsgHboaaIBw HTTP/1.0\r\n\r\n";
-//            /* Parsing the request string */
-////            for(i=0; i<strlen(req); i++)
-////            {
-////                if(req[i] == 'H' && req[i+1] == 'o' && req[i+2] == 's' && req[i+3] == 't')
-////                {
-////                    for(j=i+6; req[j] != '\r'; j++)
-////                    {
-////                        hoststring[j-i-6] = req[j];
-////                    }
-////                    hoststring[j] = '\0';
-////                    break;
-////                }
-////            }
-////            printf("\nHost extracted : '%s'\n", hoststring);
-//            /* default port */
-//            portno = 80;
-//            
-//            /* Create a socket point */
-//            sockfd = socket(AF_INET, SOCK_STREAM, 0);
-//            if(sockfd < 0)
-//            {
-//                perror("Error opening socket\n");
-//                exit(1);
-//            }
-//            server = gethostbyname(hoststring);
-//            if (server == NULL)
-//            {
-//                fprintf(stderr, "No such host\n");
-//                exit(0);
-//            }
-////            printf("\nConnected to host\n");
-//            
-//            bzero((char *) &serv_addr, sizeof(serv_addr));
-//            serv_addr.sin_family = AF_INET;
-//            pptr = (struct in_addr  *)server->h_addr;
-//            bcopy((char *)pptr, (char *)&serv_addr.sin_addr, server->h_length);
-//            serv_addr.sin_port = htons(portno);
-//            
-//            /* Connect to server */
-//            if(connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr))<0)
-//            {
-//                perror("Error in connecting to server\n");
-//                exit(1);
-//            }
-//            
-//            /* Message to be sent to the server */
-//            /* printf("message to server : "); */
-//            bzero(buffer, 256);
-//            /* fgets(buffer, 255, stdin); */
-//            
-//            /* Send message to server */
-//            n = write(sockfd, req, strlen(req));
-//            if(n == 0) {
-//                perror("Error writing to socket\n");
-//                exit(1);
-//            }
-//            
-//            /* Read server response */
-//            bzero(buffer, 256);
-//            flag = 1;
-//            size_t i;
-////            printf("\nreading server response\n");
-//            while( (n = read(sockfd, buffer, 255) > 0))
-//            {
-//                if(flag)
-//                {
-//                    printf("%s", buffer);
-//                    flag = 0;
-//                }
-//                i = write(connection_fd, buffer, strlen(buffer));
-//            }
-//            close(sockfd);
-            
-            
-            //// ******************
         }
         
-        /* Try to open the module.  */
-//        module = module_open (module_file_name);
     }
     
 }
@@ -527,15 +332,14 @@ void *handle_request(void *param)
                 }
             }
         }
-        else if (bytes_read == 0)
-        /* The client closed the connection before sending any data.
-         Nothing to do.  */
-            ;
+        else if (bytes_read == 0) {
+            /* The client closed the connection before sending any data.
+             Nothing to do.  */
+        }
         else
         /* The call to read failed.  */
-            perror ("read");
+            perror ("read failed");
         
-        // *******************
         shutdown(new_sd, SHUT_RDWR);
         close(new_sd);
     

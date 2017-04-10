@@ -49,4 +49,22 @@ void parse_command_line_arguments(int argc, char* argv[] )
 }
 
 
+int createFtokFileIfNotExists(char* fileName)
+{
+    char completeFileName[1024] = "/Users/Hassaan/Desktop/ftokFiles/file";
+    strcat(completeFileName, fileName);
+    strcat(completeFileName, ".dat");
+    
+    strcpy(fileName, completeFileName);
+    FILE *fd = fopen(completeFileName, "a");
+    if (fd == NULL) {
+        perror("Could not open file.");
+        return -1;
+    }
+    else {
+        fclose(fd);
+    }
+    return 0;
+}
+
 #endif /* helpers_h */

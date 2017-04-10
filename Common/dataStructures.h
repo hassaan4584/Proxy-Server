@@ -14,7 +14,7 @@
 
 // MARK: - Constants
 
-#define PROXY_SERVER_PORT_NO		5711
+#define PROXY_SERVER_PORT_NO		5717
 #define SERVER_PORT_NO				PROXY_SERVER_PORT_NO + 100
 #define LOCAL_GET                   "LOCAL-GET"
 #define BYTES                       1024
@@ -51,12 +51,14 @@ struct ThreadPoolManager
 
 struct SharedMemory
 {
-    pthread_cond_t cond;
+    pthread_cond_t cond_ps;
+    pthread_cond_t cond_server;
     pthread_mutex_t mutex;
     pthread_condattr_t condAttr;
     pthread_mutexattr_t mutexAttr;
     bool hasFileCompletelyWritten;
     char data[BUFFER_SIZE];
+    size_t dataWritten;
 };
 
 #endif /* dataStructures_h */

@@ -36,6 +36,7 @@
 #include "response.h"
 #include "queue.h"
 
+#define SERVER_DIRECTORY_PATH       "/Volumes/Parhai/Parhai/LUMS/Semester 2 Spring17/Advanced Operating Systems/Assignments/Assignment 2/Assignment2-Server/Assignment2-Server/"
 
 
 int createThreadPool(struct ThreadPoolManager *manager);
@@ -149,6 +150,10 @@ static void handle_local_get (int connection_fd, const char* page, const char* f
             perror("shmat");
             return;
         }
+        if (pthread_cond_init(&segptr->cond_server, &segptr->condAttr) != 0) {
+            perror("Server. pthread_cond_init() error");
+        }
+
 
         
         char file_name[1024];
@@ -163,35 +168,48 @@ static void handle_local_get (int connection_fd, const char* page, const char* f
             memmove (file_name, file_name+1, strlen (file_name+1) + 1);
         }
 
-        char filePath[1024] = "/Volumes/Parhai/Parhai/LUMS/Semester 2 Spring17/Advanced Operating Systems/Assignments/Assignment 2/Assignment2-Server/Assignment2-Server/";
+        char filePath[1024];
+        strcpy(filePath, SERVER_DIRECTORY_PATH);
         strcat(filePath, file_name);
-        
-        if ( (fd=open(file_name, O_RDONLY))!=-1 )    //FILE FOUND - server running from terminal
+        fd = open(file_name, O_RDONLY); //if file opens, server running from terminal
+        if (fd == -1) {
+            fd = open(filePath, O_RDONLY); //if file opens, server running using xcode
+        }
+        if ( fd !=-1 )
         {
             write (connection_fd, ok_response, strlen (ok_response));
             send_data_using_shared_memory(ftokFileName, threadNoAsKey, ok_response, strlen (ok_response));
             strncpy(segptr->data, ok_response, strlen (ok_response));
+            segptr->dataWritten = strlen(ok_response);
 
+            if (pthread_mutex_lock(&segptr->mutex) != 0) {
+                perror("Server. pthread_mutex_lock() error");
+            }
+            if (pthread_cond_broadcast(&segptr->cond_ps) != 0) {
+                perror("Server. pthread_cond_broadcast() error");
+            }
             while ( (bytes_read=read(fd, data_to_send, BYTES-1))>0 ) {
-//                write (connection_fd, data_to_send, bytes_read);
                 send_data_using_shared_memory(ftokFileName, threadNoAsKey, data_to_send, bytes_read);
                 strncpy(segptr->data, data_to_send, bytes_read);
+                segptr->dataWritten = bytes_read;
+                segptr->hasFileCompletelyWritten = false;
+                if (pthread_cond_broadcast(&segptr->cond_ps) != 0) {
+                    perror("Server. pthread_cond_broadcast() error");
+                }
+                if (pthread_cond_wait(&segptr->cond_server, &segptr->mutex) != 0) {
+                    perror("Server. pthread_cond_timedwait() error");
+                }
+
+            }
+            segptr->hasFileCompletelyWritten = true;
+            if (pthread_mutex_unlock(&segptr->mutex) != 0) {
+                perror("Server. pthread_mutex_lock() error");
+            }
+            if (pthread_cond_broadcast(&segptr->cond_ps) != 0) {
+                perror("Server. pthread_cond_broadcast() error");
             }
             close(fd);
         }
-        else if ((fd=open(filePath, O_RDONLY))!=-1) { // if the server is running using xcode
-            write (connection_fd, ok_response, strlen (ok_response));
-            send_data_using_shared_memory(ftokFileName, threadNoAsKey, ok_response, strlen (ok_response));
-            strncpy(segptr->data, ok_response, strlen (ok_response));
-
-            while ( (bytes_read=read(fd, data_to_send, BYTES-1))>0 ) {
-//                write (connection_fd, data_to_send, bytes_read);
-                send_data_using_shared_memory(ftokFileName, threadNoAsKey, data_to_send, bytes_read);
-                strncpy(segptr->data, data_to_send, bytes_read);
-            }
-            close(fd);
-        }
-
         else {
             /* Either the requested page was malformed, or we couldn't open a
              module with the indicated name.  Either way, return the HTTP
@@ -201,11 +219,13 @@ static void handle_local_get (int connection_fd, const char* page, const char* f
             snprintf (response, sizeof (response), not_found_response_template, page);
             /* Write it on the shared memory  */
             strcpy(segptr->data, response);
+            segptr->dataWritten = sizeof(response);
+            segptr->hasFileCompletelyWritten = true;
 
         }
         
         // Signal Proxy server that all data has been written
-        if (pthread_cond_signal(&segptr->cond) != 0) {
+        if (pthread_cond_signal(&segptr->cond_ps) != 0) {
             perror("pthread_cond_signal() error");
         }
         // After all the data has been written, we will detach this shared memory segment.

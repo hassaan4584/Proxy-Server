@@ -96,7 +96,7 @@ static void handle_get_with_shared_memory (int connection_fd, const char* proxyB
             if (pthread_condattr_setpshared(&segptr->condAttr, PTHREAD_PROCESS_SHARED) != 0) {
                 perror("pthread_condattr_setpshared() error");
             }
-            if (pthread_cond_init(&segptr->cond, &segptr->condAttr) != 0) {
+            if (pthread_cond_init(&segptr->cond_ps, &segptr->condAttr) != 0) {
                 perror("pthread_cond_init() error");
             }
             if (pthread_mutex_init(&segptr->mutex, &segptr->mutexAttr) != 0) {
@@ -164,12 +164,28 @@ static void handle_get_with_shared_memory (int connection_fd, const char* proxyB
 //            gettimeofday(&tv, NULL);
 //            ts.tv_sec = tv.tv_sec + 2;
 //            ts.tv_nsec = 0;
-            if (pthread_cond_wait(&segptr->cond, &segptr->mutex) != 0) {
+            if (pthread_cond_wait(&segptr->cond_ps, &segptr->mutex) != 0) {
                 perror("pthread_cond_timedwait() error");
             }
-            send(connection_fd, segptr->data, strlen(segptr->data), 0); // read once the data is written
-
+            send(connection_fd, segptr->data, segptr->dataWritten, 0); // read once the data is written
             pthread_mutex_unlock(&segptr->mutex);
+            if (pthread_cond_broadcast(&segptr->cond_server) != 0) {
+                perror("Server. pthread_cond_broadcast() error");
+            }
+            while (segptr->hasFileCompletelyWritten == false) {
+                if (pthread_cond_broadcast(&segptr->cond_server) != 0) {
+                    perror("Server. pthread_cond_broadcast() error");
+                }
+                if (pthread_cond_wait(&segptr->cond_ps, &segptr->mutex) != 0) {
+                    perror("pthread_cond_timedwait() error");
+                }
+                send(connection_fd, segptr->data, segptr->dataWritten, 0); // read once the data is written
+                pthread_mutex_unlock(&segptr->mutex);
+                if (pthread_cond_broadcast(&segptr->cond_server) != 0) {
+                    perror("Server. pthread_cond_broadcast() error");
+                }
+            }
+            
 //            struct shmid_ds buff;
 //            if (shmctl(shmid, IPC_STAT, &buff) == -1) {
 //                perror("shmctl() error with IPC_STAT");
